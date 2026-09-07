@@ -1,0 +1,1 @@
+public record SubscribeDto(Guid MemberId, Guid PlanId);

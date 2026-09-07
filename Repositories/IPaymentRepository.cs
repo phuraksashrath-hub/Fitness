@@ -1,0 +1,1 @@
+public interface IPaymentRepository : IRepository<Payment> { }

@@ -1,0 +1,1 @@
+public record ProcessPaymentDto(Guid MemberId, Guid? SubscriptionId, decimal Amount, PaymentMethod Method, string DiscountType);

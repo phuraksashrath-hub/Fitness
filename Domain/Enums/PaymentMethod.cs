@@ -1,0 +1,1 @@
+public enum PaymentMethod { CREDIT_CARD, PROMPTPAY }
