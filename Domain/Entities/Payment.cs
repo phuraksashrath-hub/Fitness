@@ -1,3 +1,5 @@
+namespace FitnessCenter.Api.Domain.Entities;
+
 public abstract class Payment
 {
     public Guid Id { get; set; } = Guid.NewGuid();

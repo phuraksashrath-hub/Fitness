@@ -1,3 +1,5 @@
+using FitnessCenter.Api.Strategies;
+
 public static class DiscountStrategyResolver
 {
     public static IDiscountStrategy Resolve(string discountType)

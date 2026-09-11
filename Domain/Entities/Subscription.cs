@@ -1,3 +1,5 @@
+namespace FitnessCenter.Api.Domain.Entities;
+
 public class Subscription
 {
     public Guid Id { get; set; } = Guid.NewGuid();

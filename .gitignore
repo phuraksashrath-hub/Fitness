@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.nuget
+bin
+obj
+*.user
+*.suo
+*.db
+*.sqlite
+.env
+.DS_Store

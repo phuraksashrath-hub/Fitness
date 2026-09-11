@@ -1,4 +1,5 @@
 using FitnessCenter.Api.Domain.Entities;
+using FitnessCenter.Api.DTOs;
 using FitnessCenter.Api.Repositories;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -28,7 +29,8 @@ public class AuthService
             FullName = dto.FullName,
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Phone = dto.Phone
+            Phone = dto.Phone,
+            Role = "MEMBER"
         };
         await _userRepo.AddMemberAsync(member);
     }
@@ -39,12 +41,15 @@ public class AuthService
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             throw new Exception("Invalid credentials");
 
+        var role = string.IsNullOrWhiteSpace(user.Role) ? "MEMBER" : user.Role;
+
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, "MEMBER"),
-            new Claim("fullName", user.FullName)
+            new Claim(ClaimTypes.Role, role),
+            new Claim("fullName", user.FullName),
+            new Claim("role", role)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));

@@ -1,3 +1,4 @@
+using FitnessCenter.Api.DTOs;
 using FitnessCenter.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 

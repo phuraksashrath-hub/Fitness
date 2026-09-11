@@ -1,3 +1,7 @@
+using FitnessCenter.Api.Domain.Entities;
+using FitnessCenter.Api.DTOs;
+using FitnessCenter.Api.Repositories;
+
 public class SubscriptionService
 {
     private readonly IRepository<MembershipPlan> _planRepo;

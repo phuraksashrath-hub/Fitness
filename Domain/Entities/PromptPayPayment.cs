@@ -1,3 +1,5 @@
+namespace FitnessCenter.Api.Domain.Entities;
+
 public class PromptPayPayment : Payment
 {
     public override bool ProcessPayment()

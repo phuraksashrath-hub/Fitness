@@ -1,45 +1,77 @@
 "use client";
 
-import { useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
+import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-export default function BookSessionPage() {
-  const [form, setForm] = useState({
-    memberId: "",
-    trainerId: "",
-    subscriptionId: "",
-    sessionDate: "",
-    startTime: "",
-    endTime: ""
-  });
-  const [msg, setMsg] = useState("");
+const sessions = [
+  { day: "Mon", time: "06:30", coach: "Coach Natt", type: "Strength" },
+  { day: "Tue", time: "18:00", coach: "Coach Palm", type: "HIIT" },
+  { day: "Wed", time: "09:00", coach: "Coach Aom", type: "Yoga" },
+  { day: "Thu", time: "17:30", coach: "Coach Alex", type: "Boxing" },
+  { day: "Fri", time: "07:00", coach: "Coach Mint", type: "Cycle" },
+  { day: "Sat", time: "10:00", coach: "Coach Jet", type: "Functional" },
+];
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      if (token) setAuthToken(token);
-
-      const res = await api.post("/sessions/book", form);
-      setMsg(`Booked! sessionId: ${res.data.id}`);
-    } catch (err: any) {
-      setMsg(err?.response?.data?.message || "Booking failed");
-    }
-  };
-
+export default function SessionsPage() {
   return (
-    <div style={{ maxWidth: 520, margin: "40px auto" }}>
-      <h1>Book Trainer Session</h1>
-      <form onSubmit={submit}>
-        <input placeholder="Member ID" value={form.memberId} onChange={e => setForm({ ...form, memberId: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <input placeholder="Trainer ID" value={form.trainerId} onChange={e => setForm({ ...form, trainerId: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <input placeholder="Subscription ID" value={form.subscriptionId} onChange={e => setForm({ ...form, subscriptionId: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <input type="date" value={form.sessionDate} onChange={e => setForm({ ...form, sessionDate: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <input type="time" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <input type="time" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} style={{ width: "100%", marginBottom: 8 }} />
-        <button type="submit">Book</button>
-      </form>
-      <p>{msg}</p>
-    </div>
+    <ProtectedRoute>
+      <Navbar />
+      <main className="page-shell">
+        <div className="container">
+          <div className="page-header-row">
+            <div>
+              <p className="eyebrow">Training schedule</p>
+              <h1 className="page-title">Sessions</h1>
+            </div>
+            <button className="form-btn secondary">+ Book a session</button>
+          </div>
+
+          <div className="metrics-grid">
+            <div className="metric-card accent">
+              <span>Booked today</span>
+              <strong>18</strong>
+            </div>
+            <div className="metric-card">
+              <span>Available slots</span>
+              <strong>42</strong>
+            </div>
+            <div className="metric-card">
+              <span>Trainer online</span>
+              <strong>06</strong>
+            </div>
+          </div>
+
+          <div className="table-card">
+            <div className="table-header">
+              <h2>Weekly schedule</h2>
+              <span>Next 7 days</span>
+            </div>
+
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Time</th>
+                  <th>Coach</th>
+                  <th>Class</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.map((session) => (
+                  <tr key={`${session.day}-${session.time}`}>
+                    <td>{session.day}</td>
+                    <td>{session.time}</td>
+                    <td>{session.coach}</td>
+                    <td>{session.type}</td>
+                    <td><span className="status-pill confirmed">Confirmed</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </ProtectedRoute>
   );
 }

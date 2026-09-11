@@ -1,3 +1,9 @@
+using FitnessCenter.Api.Domain.Entities;
+using FitnessCenter.Api.DTOs;
+using FitnessCenter.Api.Factories;
+using FitnessCenter.Api.Repositories;
+using FitnessCenter.Api.Strategies;
+
 public class PaymentService
 {
     private readonly IPaymentRepository _paymentRepo;

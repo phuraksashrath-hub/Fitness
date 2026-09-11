@@ -1,3 +1,7 @@
+using FitnessCenter.Api.Domain.Entities;
+using FitnessCenter.Api.DTOs;
+using FitnessCenter.Api.Repositories;
+
 public class BookingService
 {
     private readonly ISubscriptionRepository _subRepo;
@@ -38,5 +42,28 @@ public class BookingService
         await _subRepo.UpdateAsync(sub);
 
         return session;
+    }
+
+    public async Task<List<WorkoutSession>> GetByMemberAsync(Guid memberId)
+        => await _sessionRepo.GetByMemberAsync(memberId);
+
+    public async Task CancelAsync(Guid id)
+    {
+        var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
+        session.Status = "CANCELLED";
+        await _sessionRepo.UpdateAsync(session);
+    }
+
+    public async Task RescheduleAsync(Guid id, RescheduleDto dto)
+    {
+        var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
+
+        var conflict = await _sessionRepo.HasTrainerConflict(session.TrainerId, dto.SessionDate, dto.StartTime, dto.EndTime);
+        if (conflict) throw new Exception("Trainer timeslot conflict");
+
+        session.SessionDate = dto.SessionDate;
+        session.StartTime = dto.StartTime;
+        session.EndTime = dto.EndTime;
+        await _sessionRepo.UpdateAsync(session);
     }
 }

@@ -10,17 +10,23 @@ export default function Navbar() {
   const logout = () => {
     localStorage.removeItem("token");
     clearAuthToken();
-    router.push("/login");
+    router.push("/");
   };
 
   return (
-    <div style={{ display: "flex", gap: 12, padding: 16, borderBottom: "1px solid #ddd", flexWrap: "wrap" }}>
-      <Link href="/dashboard">Dashboard</Link>
-      <Link href="/subscriptions">Subscriptions</Link>
-      <Link href="/sessions">Sessions</Link>
-      <Link href="/sessions/book">Book Session</Link>
-      <Link href="/payments">Payments</Link>
-      <button onClick={logout}>Logout</button>
-    </div>
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <div className="brand">FitFlow</div>
+
+        <div className="nav-links">
+          <Link className="nav-link" href="/dashboard">Dashboard</Link>
+          <Link className="nav-link" href="/subscriptions">Subscriptions</Link>
+          <Link className="nav-link" href="/sessions">Sessions</Link>
+          <Link className="nav-link" href="/sessions/book">Book Session</Link>
+          <Link className="nav-link" href="/payments">Payments</Link>
+          <button className="nav-btn" onClick={logout}>Logout</button>
+        </div>
+      </div>
+    </nav>
   );
 }

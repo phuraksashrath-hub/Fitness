@@ -1,3 +1,5 @@
+namespace FitnessCenter.Api.Domain.Entities;
+
 public class WorkoutSession
 {
     public Guid Id { get; set; } = Guid.NewGuid();

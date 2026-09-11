@@ -1,3 +1,8 @@
+using FitnessCenter.Api.Domain.Entities;
+using FitnessCenter.Api.Domain.Enums;
+
+namespace FitnessCenter.Api.Factories;
+
 public static class PaymentFactory
 {
     public static Payment Create(PaymentMethod method)

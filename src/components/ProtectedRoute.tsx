@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { setAuthToken } from "@/lib/api";
+import { decodeJwtPayload, setAuthToken } from "@/lib/api";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,6 +14,14 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       router.replace("/login");
       return;
     }
+
+    const payload = decodeJwtPayload(token);
+    if (!payload || !payload.exp || Date.now() >= payload.exp * 1000) {
+      localStorage.removeItem("token");
+      router.replace("/login");
+      return;
+    }
+
     setAuthToken(token);
     setReady(true);
   }, [router]);

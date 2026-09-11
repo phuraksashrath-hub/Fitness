@@ -1,1 +1,3 @@
+namespace FitnessCenter.Api.DTOs;
+
 public record BookSessionDto(Guid MemberId, Guid TrainerId, Guid SubscriptionId, DateOnly SessionDate, TimeOnly StartTime, TimeOnly EndTime);
