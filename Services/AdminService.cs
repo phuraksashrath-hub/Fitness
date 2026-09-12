@@ -1,3 +1,4 @@
+using System.Text;
 using FitnessCenter.Api.Data;
 using FitnessCenter.Api.Domain.Entities;
 using FitnessCenter.Api.DTOs;
@@ -105,6 +106,19 @@ public class AdminService
         return new AdminTrainerDto(trainer.Id, trainer.FullName, trainer.Email, trainer.Specialty ?? "General fitness", trainer.Role);
     }
 
+    public async Task DeleteTrainerAsync(Guid id)
+    {
+        var trainer = await _userRepo.GetTrainerByIdAsync(id) ?? throw new Exception("Trainer not found");
+        var hasLinkedSessions = await _db.WorkoutSessions.AnyAsync(x => x.TrainerId == id);
+        if (hasLinkedSessions)
+        {
+            throw new Exception("Cannot delete trainer with linked sessions");
+        }
+
+        _db.Trainers.Remove(trainer);
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<AdminSubscriptionDto>> GetSubscriptionsAsync()
     {
         return await (
@@ -168,4 +182,67 @@ public class AdminService
             new { label = "Revenue", value = totalRevenue }
         };
     }
+
+    public async Task<(byte[] content, string fileName)> ExportReportAsync(string reportType)
+    {
+        var normalized = reportType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "members" => (Encoding.UTF8.GetBytes(await BuildMembersCsvAsync()), "members-report.csv"),
+            "trainers" => (Encoding.UTF8.GetBytes(await BuildTrainersCsvAsync()), "trainers-report.csv"),
+            "subscriptions" => (Encoding.UTF8.GetBytes(await BuildSubscriptionsCsvAsync()), "subscriptions-report.csv"),
+            "payments" => (Encoding.UTF8.GetBytes(await BuildPaymentsCsvAsync()), "payments-report.csv"),
+            _ => throw new Exception("Unknown report type")
+        };
+    }
+
+    private async Task<string> BuildMembersCsvAsync()
+    {
+        var members = await GetMembersAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,FullName,Email,Phone,Role");
+        foreach (var item in members)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",{item.Email},{item.Phone},{item.Role}");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildTrainersCsvAsync()
+    {
+        var trainers = await GetTrainersAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,FullName,Email,Specialty,Role");
+        foreach (var item in trainers)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",{item.Email},\"{Escape(item.Specialty)}\",{item.Role}");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildSubscriptionsCsvAsync()
+    {
+        var subscriptions = await GetSubscriptionsAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,MemberName,PlanName,Status,RemainingSessions,StartDate,EndDate");
+        foreach (var item in subscriptions)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",{item.PlanName},{item.Status},{item.RemainingSessions},{item.StartDate},{item.EndDate}");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildPaymentsCsvAsync()
+    {
+        var payments = await GetPaymentsAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,MemberName,Method,Amount,DiscountAmount,FinalAmount,Status,CreatedAt");
+        foreach (var item in payments)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",{item.Method},{item.Amount},{item.DiscountAmount},{item.FinalAmount},{item.Status},{item.CreatedAt:O}");
+        }
+        return builder.ToString();
+    }
+
+    private static string Escape(string value) => value.Replace("\"", "\"\"");
 }

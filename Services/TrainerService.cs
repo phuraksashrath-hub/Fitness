@@ -35,7 +35,9 @@ public class TrainerService
                 session.SessionDate,
                 session.StartTime,
                 session.EndTime,
-                session.Status)
+                session.Status,
+                session.TrainerNotes,
+                session.CompletedAt)
         ).ToListAsync();
 
         var memberProgress = await (
@@ -45,7 +47,7 @@ public class TrainerService
             where _db.WorkoutSessions.Any(session =>
                 session.SubscriptionId == subscription.Id &&
                 session.TrainerId == trainerId &&
-                session.Status == "BOOKED")
+                (session.Status == "BOOKED" || session.Status == "COMPLETED"))
             orderby member.FullName
             select new TrainerMemberProgressDto(
                 member.FullName,
@@ -60,11 +62,38 @@ public class TrainerService
         return new TrainerDashboardDto(
             trainer.FullName,
             trainer.Specialty ?? "General fitness",
-            schedule.Count(x => x.SessionDate == today && x.Status == "BOOKED"),
-            schedule.Count(x => x.Status == "BOOKED"),
+            schedule.Count(x => x.SessionDate == today),
+            schedule.Count,
             memberProgress.Select(x => x.MemberName).Distinct().Count(),
             Math.Round(weeklyHours, 1),
             schedule.Take(8).ToList(),
             memberProgress.Take(6).ToList());
+    }
+
+    public async Task UpdateNotesAsync(Guid trainerId, Guid sessionId, string notes)
+    {
+        var session = await _db.WorkoutSessions.FirstOrDefaultAsync(x => x.Id == sessionId)
+            ?? throw new Exception("Session not found");
+        if (session.TrainerId != trainerId) throw new Exception("Session does not belong to this trainer");
+
+        session.TrainerNotes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task MarkCompletedAsync(Guid trainerId, Guid sessionId, string? notes)
+    {
+        var session = await _db.WorkoutSessions.FirstOrDefaultAsync(x => x.Id == sessionId)
+            ?? throw new Exception("Session not found");
+        if (session.TrainerId != trainerId) throw new Exception("Session does not belong to this trainer");
+        if (session.Status != "BOOKED") throw new Exception("Only booked sessions can be marked as completed");
+
+        session.Status = "COMPLETED";
+        session.CompletedAt = DateTime.UtcNow;
+        if (!string.IsNullOrWhiteSpace(notes))
+        {
+            session.TrainerNotes = notes.Trim();
+        }
+
+        await _db.SaveChangesAsync();
     }
 }

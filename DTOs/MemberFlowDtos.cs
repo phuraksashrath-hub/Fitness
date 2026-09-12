@@ -23,7 +23,9 @@ public record SessionSummaryDto(
     DateOnly SessionDate,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    string Status);
+    string Status,
+    string? TrainerNotes,
+    DateTime? CompletedAt);
 
 public record PaymentSummaryDto(
     Guid Id,
@@ -62,7 +64,9 @@ public record TrainerSessionItemDto(
     DateOnly SessionDate,
     TimeOnly StartTime,
     TimeOnly EndTime,
-    string Status);
+    string Status,
+    string? TrainerNotes,
+    DateTime? CompletedAt);
 
 public record TrainerMemberProgressDto(
     string MemberName,
@@ -79,3 +83,6 @@ public record TrainerDashboardDto(
     double WeeklyHours,
     List<TrainerSessionItemDto> UpcomingSchedule,
     List<TrainerMemberProgressDto> MemberProgress);
+
+public record UpdateTrainerNotesDto(string Notes);
+public record MarkTrainerSessionCompletedDto(string? Notes);

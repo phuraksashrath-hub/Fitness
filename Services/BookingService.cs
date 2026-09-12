@@ -54,7 +54,7 @@ public class BookingService
         await _sessionRepo.AddAsync(session);
         await _subRepo.UpdateAsync(sub);
 
-        return new SessionSummaryDto(session.Id, session.MemberId, session.TrainerId, session.SubscriptionId, trainer.FullName, session.SessionDate, session.StartTime, session.EndTime, session.Status);
+        return new SessionSummaryDto(session.Id, session.MemberId, session.TrainerId, session.SubscriptionId, trainer.FullName, session.SessionDate, session.StartTime, session.EndTime, session.Status, session.TrainerNotes, session.CompletedAt);
     }
 
     public async Task<List<SessionSummaryDto>> GetByMemberAsync(Guid memberId)
@@ -73,7 +73,9 @@ public class BookingService
                 session.SessionDate,
                 session.StartTime,
                 session.EndTime,
-                session.Status)
+                session.Status,
+                session.TrainerNotes,
+                session.CompletedAt)
         ).ToListAsync();
     }
 

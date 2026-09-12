@@ -58,6 +58,13 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> UpdateTrainer(Guid id, [FromBody] UpdateTrainerDto dto)
         => Ok(await _service.UpdateTrainerAsync(id, dto));
 
+    [HttpDelete("trainers/{id:guid}")]
+    public async Task<IActionResult> DeleteTrainer(Guid id)
+    {
+        await _service.DeleteTrainerAsync(id);
+        return Ok(new { message = "Trainer deleted" });
+    }
+
     [HttpGet("subscriptions")]
     public async Task<IActionResult> GetSubscriptions()
         => Ok(await _service.GetSubscriptionsAsync());
@@ -65,4 +72,11 @@ public class AdminController : ControllerBase
     [HttpGet("payments")]
     public async Task<IActionResult> GetPayments()
         => Ok(await _service.GetPaymentsAsync());
+
+    [HttpGet("reports/{reportType}")]
+    public async Task<IActionResult> ExportReport(string reportType)
+    {
+        var result = await _service.ExportReportAsync(reportType);
+        return File(result.content, "text/csv", result.fileName);
+    }
 }
