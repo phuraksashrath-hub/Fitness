@@ -33,4 +33,49 @@ public record PaymentSummaryDto(
     decimal DiscountAmount,
     decimal FinalAmount,
     string Status,
-    string Method);
+    string Method,
+    DateTime CreatedAt);
+
+public record AdminSubscriptionDto(
+    Guid Id,
+    string MemberName,
+    string PlanName,
+    string Status,
+    int RemainingSessions,
+    DateOnly StartDate,
+    DateOnly EndDate);
+
+public record AdminPaymentDto(
+    Guid Id,
+    string MemberName,
+    string Method,
+    decimal Amount,
+    decimal DiscountAmount,
+    decimal FinalAmount,
+    string Status,
+    DateTime CreatedAt);
+
+public record TrainerSessionItemDto(
+    Guid Id,
+    string MemberName,
+    string PlanName,
+    DateOnly SessionDate,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    string Status);
+
+public record TrainerMemberProgressDto(
+    string MemberName,
+    string PlanName,
+    int RemainingSessions,
+    string SubscriptionStatus);
+
+public record TrainerDashboardDto(
+    string TrainerName,
+    string Specialty,
+    int TodaySessions,
+    int UpcomingSessions,
+    int ActiveMembers,
+    double WeeklyHours,
+    List<TrainerSessionItemDto> UpcomingSchedule,
+    List<TrainerMemberProgressDto> MemberProgress);

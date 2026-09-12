@@ -2514,3 +2514,359 @@ select:focus {
     flex-direction: column;
   }
 }
+
+.quick-credential-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.quick-credential-btn {
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #fff;
+  color: #111;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.control-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(245, 24, 59, 0.24), transparent 26%),
+    linear-gradient(180deg, #0f1012 0%, #17181c 100%);
+  padding: 24px;
+}
+
+.control-shell {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+}
+
+.control-hero {
+  display: grid;
+  grid-template-columns: 1.2fr 320px;
+  gap: 20px;
+  padding: 30px;
+  border-radius: 32px;
+  background:
+    linear-gradient(120deg, rgba(232, 20, 58, 0.98) 0%, rgba(185, 9, 43, 0.95) 42%, rgba(18, 19, 21, 0.98) 42%, rgba(18, 19, 21, 1) 100%);
+  color: #fff;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  position: relative;
+}
+
+.control-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0 55%, rgba(255, 255, 255, 0.08) 55% 57%, transparent 57% 100%);
+  pointer-events: none;
+}
+
+.control-hero-copy h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(3rem, 6vw, 5.8rem);
+  line-height: 0.88;
+  letter-spacing: -0.08em;
+  text-transform: uppercase;
+  font-family: "Arial Black", "Segoe UI", sans-serif;
+}
+
+.control-hero-copy p {
+  max-width: 650px;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.control-tag,
+.panel-kicker {
+  display: inline-block;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.control-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.control-secondary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-weight: 700;
+}
+
+.control-ribbon-card {
+  align-self: end;
+  padding: 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.control-ribbon-card span,
+.control-ribbon-card small {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.control-ribbon-card strong {
+  font-size: 1.8rem;
+}
+
+.control-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.control-tabbar button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.control-tabbar button.active,
+.control-notice {
+  background: linear-gradient(135deg, #ef2447 0%, #d40f2f 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 14px 26px rgba(213, 16, 45, 0.28);
+}
+
+.control-notice {
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-weight: 700;
+}
+
+.control-metric-grid,
+.control-two-column {
+  display: grid;
+  gap: 18px;
+}
+
+.control-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.control-two-column {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.control-metric-card,
+.control-panel {
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 241, 237, 0.98));
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.14);
+}
+
+.control-metric-card {
+  padding: 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.control-metric-card span {
+  color: #6a6671;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.control-metric-card strong {
+  color: #111;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  line-height: 1;
+}
+
+.control-metric-card.accent,
+.trainer-metric-card {
+  background: linear-gradient(135deg, #141519 0%, #202228 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.control-metric-card.accent span,
+.control-metric-card.accent strong,
+.trainer-metric-card span,
+.trainer-metric-card strong {
+  color: #fff;
+}
+
+.control-panel {
+  padding: 24px;
+}
+
+.dark-panel {
+  background: linear-gradient(180deg, #111217 0%, #1a1c22 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.dark-panel h2,
+.dark-panel p,
+.dark-panel strong,
+.dark-panel small,
+.dark-panel span {
+  color: inherit;
+}
+
+.control-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.control-panel-head h2 {
+  margin: 6px 0 0;
+  font-size: 1.8rem;
+  color: #111;
+}
+
+.dark-panel .control-panel-head h2 {
+  color: #fff;
+}
+
+.schedule-list,
+.progress-list {
+  display: grid;
+  gap: 14px;
+}
+
+.schedule-item,
+.progress-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.control-panel .progress-item {
+  background: rgba(17, 17, 17, 0.04);
+  border-color: rgba(17, 17, 17, 0.06);
+}
+
+.schedule-item p,
+.progress-item p {
+  margin: 6px 0 0;
+  color: #817b86;
+}
+
+.dark-panel .schedule-item p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.schedule-meta,
+.progress-badge-wrap {
+  display: grid;
+  gap: 6px;
+  text-align: right;
+}
+
+.control-table-wrap {
+  overflow-x: auto;
+}
+
+.control-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.control-table th,
+.control-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.control-table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #726c77;
+}
+
+.control-create-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.trainer-create-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-trainer-card {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .control-hero,
+  .control-two-column,
+  .control-metric-grid,
+  .control-create-grid,
+  .trainer-create-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .control-page {
+    padding: 14px;
+  }
+
+  .control-hero {
+    padding: 22px;
+  }
+
+  .control-hero-copy h1 {
+    font-size: 3.1rem;
+  }
+
+  .schedule-item,
+  .progress-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .schedule-meta,
+  .progress-badge-wrap {
+    text-align: left;
+  }
+}

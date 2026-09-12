@@ -29,6 +29,8 @@ export default function LoginPage() {
 
       if (role === "ADMIN") {
         router.push("/admin");
+      } else if (role === "TRAINER") {
+        router.push("/trainer");
       } else if (selectedPlanId) {
         router.push(`/subscriptions?planId=${selectedPlanId}`);
       } else {
@@ -47,7 +49,7 @@ export default function LoginPage() {
         <div className="login-visual">
           <div className="login-badge">PALM FITNESS</div>
           <h1>Welcome back</h1>
-          <p>ล็อกอินเพื่อซื้อแพ็กเกจ ชำระเงิน จองเทรนเนอร์ และติดตามความก้าวหน้า</p>
+          <p>ล็อกอินเพื่อซื้อแพ็กเกจ จองเทรนเนอร์ เปิดหน้าควบคุม หรือดู trainer dashboard</p>
         </div>
 
         <div className="login-panel">
@@ -61,6 +63,18 @@ export default function LoginPage() {
               สมัครสมาชิกแล้ว เหลือเพียงล็อกอินเพื่อยืนยันแพ็กเกจและชำระเงิน
             </p>
           )}
+
+          <div className="quick-credential-bar">
+            <button type="button" className="quick-credential-btn" onClick={() => { setEmail("admin@palmfitness.com"); setPassword("admin123"); }}>
+              Admin demo
+            </button>
+            <button type="button" className="quick-credential-btn" onClick={() => { setEmail("member@palmfitness.com"); setPassword("member123"); }}>
+              Member demo
+            </button>
+            <button type="button" className="quick-credential-btn" onClick={() => { setEmail("coach.palm@palmfitness.com"); setPassword("trainer123"); }}>
+              Trainer demo
+            </button>
+          </div>
 
           <form onSubmit={onLogin} className="login-form">
             <label>

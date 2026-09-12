@@ -101,6 +101,7 @@ builder.Services.AddScoped<SubscriptionService>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<TrainerService>();
 builder.Services.AddScoped<AdminService>();
 
 var app = builder.Build();

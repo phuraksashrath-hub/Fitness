@@ -70,7 +70,8 @@ public class PaymentService
                 x.DiscountAmount,
                 x.FinalAmount,
                 x.Status,
-                x is CreditCardPayment ? "CREDIT_CARD" : "PROMPTPAY"))
+                x is CreditCardPayment ? "CREDIT_CARD" : "PROMPTPAY",
+                x.CreatedAt))
             .ToListAsync();
     }
 }

@@ -45,4 +45,24 @@ public class AdminController : ControllerBase
     [HttpPut("plans/{id:guid}")]
     public async Task<IActionResult> UpdatePlan(Guid id, [FromBody] UpdatePlanDto dto)
         => Ok(await _service.UpdatePlanAsync(id, dto));
+
+    [HttpGet("trainers")]
+    public async Task<IActionResult> GetTrainers()
+        => Ok(await _service.GetTrainersAsync());
+
+    [HttpPost("trainers")]
+    public async Task<IActionResult> CreateTrainer([FromBody] CreateTrainerDto dto)
+        => Ok(await _service.CreateTrainerAsync(dto));
+
+    [HttpPut("trainers/{id:guid}")]
+    public async Task<IActionResult> UpdateTrainer(Guid id, [FromBody] UpdateTrainerDto dto)
+        => Ok(await _service.UpdateTrainerAsync(id, dto));
+
+    [HttpGet("subscriptions")]
+    public async Task<IActionResult> GetSubscriptions()
+        => Ok(await _service.GetSubscriptionsAsync());
+
+    [HttpGet("payments")]
+    public async Task<IActionResult> GetPayments()
+        => Ok(await _service.GetPaymentsAsync());
 }

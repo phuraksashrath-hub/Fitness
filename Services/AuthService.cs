@@ -21,7 +21,7 @@ public class AuthService
 
     public async Task RegisterAsync(RegisterDto dto)
     {
-        var exists = await _userRepo.GetMemberByEmailAsync(dto.Email);
+        var exists = await _userRepo.GetUserByEmailAsync(dto.Email);
         if (exists != null) throw new Exception("Email already used");
 
         var member = new Member
@@ -37,7 +37,7 @@ public class AuthService
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
-        var user = await _userRepo.GetMemberByEmailAsync(dto.Email) ?? throw new Exception("Invalid credentials");
+        var user = await _userRepo.GetUserByEmailAsync(dto.Email) ?? throw new Exception("Invalid credentials");
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             throw new Exception("Invalid credentials");
 
@@ -46,6 +46,7 @@ public class AuthService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Role, role),
             new Claim("fullName", user.FullName),
