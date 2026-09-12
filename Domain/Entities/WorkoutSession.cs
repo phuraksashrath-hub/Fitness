@@ -10,4 +10,6 @@ public class WorkoutSession
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public string Status { get; set; } = "BOOKED";
+    public string? TrainerNotes { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }

@@ -8,3 +8,7 @@ public record UpdateMemberDto(string FullName, string Email, string? Phone, stri
 public record MembershipPlanDto(Guid Id, string PlanName, int DurationDays, decimal Price, int MaxSessionsPerMonth);
 public record UpdatePlanDto(string PlanName, int DurationDays, decimal Price, int MaxSessionsPerMonth);
 public record CreatePlanDto(string PlanName, int DurationDays, decimal Price, int MaxSessionsPerMonth);
+public record AdminTrainerDto(Guid Id, string FullName, string Email, string Specialty, string Role);
+public record UpdateTrainerDto(string FullName, string Email, string Specialty, string Role);
+public record CreateTrainerDto(string FullName, string Email, string Password, string Specialty);
+public record AdminDashboardMetricDto(string Label, decimal Value);

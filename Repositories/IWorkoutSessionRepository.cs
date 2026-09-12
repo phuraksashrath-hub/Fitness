@@ -5,5 +5,5 @@ namespace FitnessCenter.Api.Repositories;
 public interface IWorkoutSessionRepository : IRepository<WorkoutSession>
 {
     Task<List<WorkoutSession>> GetByMemberAsync(Guid memberId);
-    Task<bool> HasTrainerConflict(Guid trainerId, DateOnly date, TimeOnly start, TimeOnly end);
+    Task<bool> HasTrainerConflict(Guid trainerId, DateOnly date, TimeOnly start, TimeOnly end, Guid? excludeSessionId = null);
 }

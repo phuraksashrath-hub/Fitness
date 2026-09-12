@@ -101,6 +101,7 @@ builder.Services.AddScoped<SubscriptionService>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<TrainerService>();
 builder.Services.AddScoped<AdminService>();
 
 var app = builder.Build();
@@ -131,6 +132,39 @@ using (var scope = app.Services.CreateScope())
         };
 
         db.Members.AddRange(admin, demoMember);
+        db.SaveChanges();
+    }
+
+    if (!db.Trainers.Any())
+    {
+        db.Trainers.AddRange(
+            new Trainer
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444441"),
+                FullName = "Coach Palm",
+                Email = "coach.palm@palmfitness.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("trainer123"),
+                Role = "TRAINER",
+                Specialty = "Strength & Conditioning"
+            },
+            new Trainer
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444442"),
+                FullName = "Coach Mint",
+                Email = "coach.mint@palmfitness.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("trainer123"),
+                Role = "TRAINER",
+                Specialty = "Mobility & Recovery"
+            },
+            new Trainer
+            {
+                Id = Guid.Parse("44444444-4444-4444-4444-444444444443"),
+                FullName = "Coach Natt",
+                Email = "coach.natt@palmfitness.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("trainer123"),
+                Role = "TRAINER",
+                Specialty = "HIIT & Fat Burn"
+            });
         db.SaveChanges();
     }
 

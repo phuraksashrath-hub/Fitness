@@ -1,3 +1,4 @@
+using System.Text;
 using FitnessCenter.Api.Data;
 using FitnessCenter.Api.Domain.Entities;
 using FitnessCenter.Api.DTOs;
@@ -69,6 +70,92 @@ public class AdminService
         return new MembershipPlanDto(plan.Id, plan.PlanName, plan.DurationDays, plan.Price, plan.MaxSessionsPerMonth);
     }
 
+    public async Task<IEnumerable<AdminTrainerDto>> GetTrainersAsync()
+    {
+        var trainers = await _userRepo.GetAllTrainersAsync();
+        return trainers.Select(x => new AdminTrainerDto(x.Id, x.FullName, x.Email, x.Specialty ?? "General fitness", x.Role));
+    }
+
+    public async Task<AdminTrainerDto> CreateTrainerAsync(CreateTrainerDto dto)
+    {
+        var exists = await _userRepo.GetUserByEmailAsync(dto.Email);
+        if (exists is not null) throw new Exception("Email already used");
+
+        var trainer = new Trainer
+        {
+            FullName = dto.FullName,
+            Email = dto.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Specialty = dto.Specialty,
+            Role = "TRAINER"
+        };
+
+        await _userRepo.AddTrainerAsync(trainer);
+        return new AdminTrainerDto(trainer.Id, trainer.FullName, trainer.Email, trainer.Specialty ?? "General fitness", trainer.Role);
+    }
+
+    public async Task<AdminTrainerDto> UpdateTrainerAsync(Guid id, UpdateTrainerDto dto)
+    {
+        var trainer = await _userRepo.GetTrainerByIdAsync(id) ?? throw new Exception("Trainer not found");
+        trainer.FullName = dto.FullName;
+        trainer.Email = dto.Email;
+        trainer.Specialty = dto.Specialty;
+        trainer.Role = dto.Role;
+
+        await _userRepo.UpdateTrainerAsync(trainer);
+        return new AdminTrainerDto(trainer.Id, trainer.FullName, trainer.Email, trainer.Specialty ?? "General fitness", trainer.Role);
+    }
+
+    public async Task DeleteTrainerAsync(Guid id)
+    {
+        var trainer = await _userRepo.GetTrainerByIdAsync(id) ?? throw new Exception("Trainer not found");
+        var hasLinkedSessions = await _db.WorkoutSessions.AnyAsync(x => x.TrainerId == id);
+        if (hasLinkedSessions)
+        {
+            throw new Exception("Cannot delete trainer with linked sessions");
+        }
+
+        _db.Trainers.Remove(trainer);
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<AdminSubscriptionDto>> GetSubscriptionsAsync()
+    {
+        return await (
+            from subscription in _db.Subscriptions
+            join member in _db.Members on subscription.MemberId equals member.Id
+            join plan in _db.MembershipPlans on subscription.PlanId equals plan.Id
+            orderby subscription.EndDate descending
+            select new AdminSubscriptionDto(
+                subscription.Id,
+                member.FullName,
+                plan.PlanName,
+                subscription.Status,
+                subscription.RemainingSessions,
+                subscription.StartDate,
+                subscription.EndDate)
+        ).ToListAsync();
+    }
+
+    public async Task<IEnumerable<AdminPaymentDto>> GetPaymentsAsync()
+    {
+        return await _db.Payments
+            .Join(_db.Members,
+                payment => payment.MemberId,
+                member => member.Id,
+                (payment, member) => new AdminPaymentDto(
+                    payment.Id,
+                    member.FullName,
+                    payment is CreditCardPayment ? "CREDIT_CARD" : "PROMPTPAY",
+                    payment.Amount,
+                    payment.DiscountAmount,
+                    payment.FinalAmount,
+                    payment.Status,
+                    payment.CreatedAt))
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task DeleteMemberAsync(Guid id)
     {
         var member = await _userRepo.GetMemberByIdAsync(id) ?? throw new Exception("Member not found");
@@ -78,17 +165,84 @@ public class AdminService
         await _db.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<object>> GetDashboardSummaryAsync()
+    public async Task<IEnumerable<AdminDashboardMetricDto>> GetDashboardSummaryAsync()
     {
         var totalMembers = await _db.Members.CountAsync();
+        var totalTrainers = await _db.Trainers.CountAsync();
         var totalPlans = await _db.MembershipPlans.CountAsync();
         var totalSubscriptions = await _db.Subscriptions.CountAsync();
+        var totalRevenue = await _db.Payments.SumAsync(x => (decimal?)x.FinalAmount) ?? 0m;
 
         return new[]
         {
-            new { label = "Members", value = totalMembers },
-            new { label = "Plans", value = totalPlans },
-            new { label = "Subscriptions", value = totalSubscriptions }
+            new AdminDashboardMetricDto("Members", totalMembers),
+            new AdminDashboardMetricDto("Trainers", totalTrainers),
+            new AdminDashboardMetricDto("Plans", totalPlans),
+            new AdminDashboardMetricDto("Subscriptions", totalSubscriptions),
+            new AdminDashboardMetricDto("Revenue", totalRevenue)
         };
     }
+
+    public async Task<(byte[] content, string fileName)> ExportReportAsync(string reportType)
+    {
+        var normalized = reportType.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "members" => (Encoding.UTF8.GetBytes(await BuildMembersCsvAsync()), "members-report.csv"),
+            "trainers" => (Encoding.UTF8.GetBytes(await BuildTrainersCsvAsync()), "trainers-report.csv"),
+            "subscriptions" => (Encoding.UTF8.GetBytes(await BuildSubscriptionsCsvAsync()), "subscriptions-report.csv"),
+            "payments" => (Encoding.UTF8.GetBytes(await BuildPaymentsCsvAsync()), "payments-report.csv"),
+            _ => throw new Exception("Unknown report type")
+        };
+    }
+
+    private async Task<string> BuildMembersCsvAsync()
+    {
+        var members = await GetMembersAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,FullName,Email,Phone,Role");
+        foreach (var item in members)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",\"{Escape(item.Email)}\",\"{Escape(item.Phone)}\",\"{Escape(item.Role)}\"");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildTrainersCsvAsync()
+    {
+        var trainers = await GetTrainersAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,FullName,Email,Specialty,Role");
+        foreach (var item in trainers)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",\"{Escape(item.Email)}\",\"{Escape(item.Specialty)}\",\"{Escape(item.Role)}\"");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildSubscriptionsCsvAsync()
+    {
+        var subscriptions = await GetSubscriptionsAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,MemberName,PlanName,Status,RemainingSessions,StartDate,EndDate");
+        foreach (var item in subscriptions)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",\"{Escape(item.PlanName)}\",\"{Escape(item.Status)}\",{item.RemainingSessions},{item.StartDate},{item.EndDate}");
+        }
+        return builder.ToString();
+    }
+
+    private async Task<string> BuildPaymentsCsvAsync()
+    {
+        var payments = await GetPaymentsAsync();
+        var builder = new StringBuilder();
+        builder.AppendLine("Id,MemberName,Method,Amount,DiscountAmount,FinalAmount,Status,CreatedAt");
+        foreach (var item in payments)
+        {
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",\"{Escape(item.Method)}\",{item.Amount},{item.DiscountAmount},{item.FinalAmount},\"{Escape(item.Status)}\",{item.CreatedAt:O}");
+        }
+        return builder.ToString();
+    }
+
+    private static string Escape(string value) => value.Replace("\"", "\"\"");
 }
