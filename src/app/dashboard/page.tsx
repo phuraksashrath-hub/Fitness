@@ -1,29 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import api, { getCurrentUserFromToken, clearAuthToken } from "@/lib/api";
-import { useRouter } from "next/navigation";
-
-const navItems = [
-  "ภาพรวม",
-  "สมาชิก",
-  "ผู้ฝึกสอน",
-  "รายรับ",
-  "คลาส",
-  "โปรโมชั่น",
-  "รายงาน",
-  "ตั้งค่า",
-];
+import {
+  getCurrentUserFromToken,
+  getMemberPayments,
+  getMemberSessions,
+  getMemberSubscriptions,
+  PaymentSummary,
+  SessionSummary,
+  setAuthToken,
+  SubscriptionSummary,
+} from "@/lib/api";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [user, setUser] = useState<{ fullName: string; email: string; role: string; memberId: string } | null>(null);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [payments, setPayments] = useState<PaymentSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const currentUser = getCurrentUserFromToken();
+    const token = localStorage.getItem("token");
     setUser(currentUser);
 
     if (!currentUser?.memberId) {
@@ -31,163 +32,152 @@ export default function DashboardPage() {
       return;
     }
 
-    api
-      .get("/sessions/me", { params: { memberId: currentUser.memberId } })
-      .then((res) => setSessions(res.data || []))
-      .catch(() => setSessions([]))
+    setAuthToken(token);
+    Promise.all([
+      getMemberSubscriptions(currentUser.memberId),
+      getMemberSessions(currentUser.memberId),
+      getMemberPayments(currentUser.memberId),
+    ])
+      .then(([subscriptionRes, sessionRes, paymentRes]) => {
+        setSubscriptions(subscriptionRes.data || []);
+        setSessions(sessionRes.data || []);
+        setPayments(paymentRes.data || []);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    clearAuthToken();
-    router.push("/login");
-  };
-
-  const upcoming = sessions.filter((s) => s.status === "BOOKED").length;
-  const completed = sessions.filter((s) => s.status === "COMPLETED").length;
-  const totalMinutes = sessions.reduce((sum, s) => {
-    const start = new Date(`2024-01-01T${s.startTime}`).getTime();
-    const end = new Date(`2024-01-01T${s.endTime}`).getTime();
-    return sum + Math.max(0, (end - start) / 60000);
-  }, 0);
+  const activeSubscription = useMemo(
+    () => subscriptions.find((item) => item.status === "ACTIVE") || subscriptions[0],
+    [subscriptions]
+  );
+  const upcoming = useMemo(() => sessions.filter((s) => s.status === "BOOKED").length, [sessions]);
+  const totalSpend = useMemo(() => payments.reduce((sum, payment) => sum + Number(payment.finalAmount || 0), 0), [payments]);
+  const trainingHours = useMemo(
+    () => Math.round(sessions.reduce((sum, s) => {
+      const start = new Date(`2024-01-01T${s.startTime}`).getTime();
+      const end = new Date(`2024-01-01T${s.endTime}`).getTime();
+      return sum + Math.max(0, (end - start) / 3600000);
+    }, 0) * 10) / 10,
+    [sessions]
+  );
 
   return (
-    <ProtectedRoute>
-      <div className="dashboard-shell">
-        <aside className="dashboard-sidebar">
-          <div className="dashboard-brand">
-            <span className="dashboard-brand-mark">P</span>
+    <ProtectedRoute roles={["MEMBER"]}>
+      <Navbar />
+      <main className="page-shell">
+        <div className="container">
+          <div className="page-header-row">
             <div>
-              <strong>Palm</strong>
-              <small>24 hour fitness</small>
+              <p className="eyebrow">Member dashboard</p>
+              <h1 className="page-title">สวัสดี {user?.fullName || "สมาชิก"}</h1>
+            </div>
+            <div className="table-actions">
+              <Link className="form-btn secondary" href="/subscriptions">Manage plan</Link>
+              <Link className="form-btn" href="/sessions/book">Book now</Link>
             </div>
           </div>
-
-          <div className="dashboard-profile-mini">
-            <div className="dashboard-avatar">{user?.fullName?.charAt(0)?.toUpperCase() || "A"}</div>
-            <div>
-              <strong>{user?.fullName || "Member"}</strong>
-              <small>{user?.role || "MEMBER"}</small>
-            </div>
-          </div>
-
-          <nav className="dashboard-side-nav">
-            {navItems.map((item, index) => (
-              <button key={item} className={`dashboard-nav-item ${index === 0 ? "active" : ""}`} type="button">
-                <span>{index === 0 ? "▣" : index === 1 ? "◉" : index === 2 ? "◎" : index === 3 ? "$" : index === 4 ? "▤" : index === 5 ? "✦" : index === 6 ? "◫" : "⚙"}</span>
-                {item}
-              </button>
-            ))}
-          </nav>
-        </aside>
-
-        <main className="dashboard-main">
-          <header className="dashboard-topbar">
-            <div className="dashboard-topbar-left">
-              <button className="dashboard-menu-button" type="button">☰</button>
-              <div>
-                <small>แดชบอร์ด</small>
-                <strong>ภาพรวมคลับ</strong>
-              </div>
-            </div>
-
-            <div className="dashboard-user-area" onClick={logout} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && logout()}>
-              <div className="dashboard-avatar small">{user?.fullName?.charAt(0)?.toUpperCase() || "A"}</div>
-              <div>
-                <strong>{user?.fullName || "Member"}</strong>
-                <small>{user?.email || "member@palmfitness.com"}</small>
-              </div>
-              <span className="dashboard-logout">ออก</span>
-            </div>
-          </header>
 
           {loading ? (
             <div className="dashboard-empty-state">กำลังโหลดข้อมูล...</div>
           ) : (
             <>
-              <section className="dashboard-stats-grid">
-                <div className="dashboard-stat-card red">
-                  <span>การจองล่วงหน้า</span>
+              <div className="metrics-grid">
+                <div className="metric-card accent">
+                  <span>Active plan</span>
+                  <strong>{activeSubscription?.planName || "None"}</strong>
+                  <small>{activeSubscription?.remainingSessions ?? 0} sessions left</small>
+                </div>
+                <div className="metric-card">
+                  <span>Upcoming</span>
                   <strong>{upcoming}</strong>
-                  <small>เซสชันที่กำลังค้าง</small>
+                  <small>booked sessions</small>
                 </div>
-                <div className="dashboard-stat-card green">
-                  <span>การฝึกทั้งหมด</span>
-                  <strong>{sessions.length}</strong>
-                  <small>{completed} รายการเสร็จสิ้น</small>
+                <div className="metric-card">
+                  <span>Total hours</span>
+                  <strong>{trainingHours}</strong>
+                  <small>hours trained</small>
                 </div>
-                <div className="dashboard-stat-card gray">
-                  <span>เวลาฝึกรวม</span>
-                  <strong>{Math.round(totalMinutes / 60)}h</strong>
-                  <small>โดยประมาณ</small>
+                <div className="metric-card">
+                  <span>Total spend</span>
+                  <strong>฿{totalSpend.toLocaleString()}</strong>
+                  <small>payment history</small>
                 </div>
-                <div className="dashboard-stat-card dark">
-                  <span>สเตตัส</span>
-                  <strong>{user?.role || "MEMBER"}</strong>
-                  <small>ออนไลน์</small>
-                </div>
-              </section>
+              </div>
 
-              <section className="dashboard-content-grid">
-                <div className="dashboard-panel large">
-                  <div className="dashboard-panel-header">
-                    <h3>สรุปผลงาน</h3>
-                    <span>เดือนนี้</span>
+              <div className="journey-grid">
+                <section className="table-card">
+                  <div className="table-header">
+                    <h2>Current membership</h2>
+                    <span>{activeSubscription?.status || "NO PLAN"}</span>
                   </div>
-                  <div className="dashboard-chart-bars" aria-label="Analytics chart">
-                    {[48, 62, 56, 74, 90, 68, 82].map((height, index) => (
-                      <span key={index} style={{ height: `${height}%` }} />
-                    ))}
-                  </div>
-                </div>
+                  {activeSubscription ? (
+                    <div className="summary-card dashboard-summary-card">
+                      <div className="summary-row"><span>Plan</span><strong>{activeSubscription.planName}</strong></div>
+                      <div className="summary-row"><span>Period</span><strong>{activeSubscription.startDate} - {activeSubscription.endDate}</strong></div>
+                      <div className="summary-row"><span>Sessions remaining</span><strong>{activeSubscription.remainingSessions}</strong></div>
+                      <div className="summary-row total"><span>Price</span><strong>฿{Number(activeSubscription.price).toLocaleString()}</strong></div>
+                    </div>
+                  ) : (
+                    <p>ยังไม่มีแพ็กเกจที่ใช้งานอยู่</p>
+                  )}
+                </section>
 
-                <div className="dashboard-panel">
-                  <div className="dashboard-panel-header">
-                    <h3>กิจกรรมเร็ว</h3>
-                    <span>วันนี้</span>
+                <section className="table-card">
+                  <div className="table-header">
+                    <h2>Recent bookings</h2>
+                    <Link href="/sessions">ดูทั้งหมด</Link>
                   </div>
-                  <ul className="dashboard-task-list">
-                    <li><strong>09:30</strong> ตรวจสอบการชำระค่าบริการ</li>
-                    <li><strong>11:15</strong> จัดสรรแผนฝึกสำหรับสมาชิกใหม่</li>
-                    <li><strong>16:40</strong> อัปเดตความคืบหน้าของคลาส</li>
-                  </ul>
-                </div>
-              </section>
-
-              <section className="dashboard-footer-row">
-                <div className="dashboard-panel slim">
-                  <div className="dashboard-panel-header">
-                    <h3>ผู้ใช้งานปัจจุบัน</h3>
-                  </div>
-                  <div className="dashboard-user-inline">
-                    <span>{user?.fullName || "Loading..."}</span>
-                    <small>{user?.role || "MEMBER"}</small>
-                  </div>
-                </div>
-
-                <div className="dashboard-panel slim">
-                  <div className="dashboard-panel-header">
-                    <h3>เซสชันล่าสุด</h3>
-                  </div>
-                  <div className="dashboard-session-list">
-                    {sessions.length > 0 ? (
-                      sessions.slice(0, 3).map((session) => (
-                        <div key={session.id} className="dashboard-session-item">
-                          <strong>{session.status}</strong>
-                          <small>{session.sessionDate || "-"} • {session.startTime || "-"}</small>
+                  <div className="history-list">
+                    {sessions.slice(0, 4).map((session) => (
+                      <article key={session.id} className="history-item">
+                        <div>
+                          <strong>{session.trainerName}</strong>
+                          <p>{session.sessionDate} • {session.startTime.slice(0, 5)} - {session.endTime.slice(0, 5)}</p>
                         </div>
-                      ))
-                    ) : (
-                      <span className="dashboard-empty-inline">ยังไม่มีข้อมูลเซสชัน</span>
-                    )}
+                        <span className={`status-chip ${session.status.toLowerCase()}`}>{session.status}</span>
+                      </article>
+                    ))}
+                    {sessions.length === 0 && <p>ยังไม่มี session ล่าสุด</p>}
                   </div>
+                </section>
+              </div>
+
+              <section className="table-card">
+                <div className="table-header">
+                  <h2>Payment history</h2>
+                  <Link href="/payments">จัดการชำระเงิน</Link>
                 </div>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Amount</th>
+                      <th>Discount</th>
+                      <th>Final</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length > 0 ? payments.slice(0, 5).map((payment) => (
+                      <tr key={payment.id}>
+                        <td>{payment.method}</td>
+                        <td>{Number(payment.amount).toLocaleString()}</td>
+                        <td>{Number(payment.discountAmount).toLocaleString()}</td>
+                        <td>{Number(payment.finalAmount).toLocaleString()}</td>
+                        <td><span className="status-pill confirmed">{payment.status}</span></td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={5}>ยังไม่มีประวัติการชำระเงิน</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </section>
             </>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
     </ProtectedRoute>
   );
 }

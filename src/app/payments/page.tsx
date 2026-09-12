@@ -1,73 +1,184 @@
 "use client";
 
-import { useState } from "react";
-import api, { setAuthToken } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import {
+  getCurrentUserFromToken,
+  getMemberPayments,
+  getMemberSubscriptions,
+  PaymentSummary,
+  processMemberPayment,
+  setAuthToken,
+  SubscriptionSummary,
+} from "@/lib/api";
+import { useSearchParams } from "next/navigation";
+
+const discounts: Record<string, number> = {
+  none: 0,
+  student: 0.1,
+  renewal: 0.15,
+};
 
 export default function PaymentPage() {
-  const [form, setForm] = useState({
-    memberId: "b23fe533-1241-454e-a7bf-0d49db15cbde",
-    subscriptionId: "9f829af0-12a4-45e8-a973-ea6c4c3ffb39",
-    amount: 1800,
-    method: "CREDIT_CARD",
-    discountType: "none",
-  });
+  const searchParams = useSearchParams();
+  const [memberId, setMemberId] = useState("");
+  const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
+  const [payments, setPayments] = useState<PaymentSummary[]>([]);
+  const [subscriptionId, setSubscriptionId] = useState("");
+  const [method, setMethod] = useState("CREDIT_CARD");
+  const [discountType, setDiscountType] = useState("none");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadData = async (currentMemberId: string, preselectedId?: string | null) => {
+    const [subscriptionRes, paymentRes] = await Promise.all([
+      getMemberSubscriptions(currentMemberId),
+      getMemberPayments(currentMemberId),
+    ]);
+
+    const memberSubscriptions = (subscriptionRes.data || []).filter((item) => item.status === "ACTIVE");
+    const currentSubscriptionId = preselectedId || memberSubscriptions[0]?.id || "";
+
+    setSubscriptions(memberSubscriptions);
+    setPayments(paymentRes.data || []);
+    setSubscriptionId(currentSubscriptionId);
+  };
+
+  useEffect(() => {
+    const user = getCurrentUserFromToken();
+    const token = localStorage.getItem("token");
+    if (!user?.memberId) return;
+
+    setMemberId(user.memberId);
+    setAuthToken(token);
+    loadData(user.memberId, searchParams.get("subscriptionId"))
+      .catch(() => setMsg("ไม่สามารถโหลดข้อมูลการชำระเงินได้"))
+      .finally(() => setLoading(false));
+  }, [searchParams]);
+
+  const selectedSubscription = useMemo(
+    () => subscriptions.find((item) => item.id === subscriptionId) || subscriptions[0],
+    [subscriptionId, subscriptions]
+  );
+
+  const amount = Number(selectedSubscription?.price || 0);
+  const discountAmount = Math.round(amount * (discounts[discountType] || 0));
+  const finalAmount = Math.max(0, amount - discountAmount);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!memberId || !selectedSubscription) return;
+
+    setSubmitting(true);
+    setMsg("");
+
     try {
-      const token = localStorage.getItem("token");
-      if (token) setAuthToken(token);
-
-      const payload = {
-        memberId: form.memberId,
-        subscriptionId: form.subscriptionId || null,
-        amount: Number(form.amount),
-        method: form.method,
-        discountType: form.discountType,
-      };
-
-      const res = await api.post("/payments/process", payload);
-      setMsg(`Paid! paymentId: ${res.data.id}, finalAmount: ${res.data.finalAmount}`);
+      await processMemberPayment({
+        memberId,
+        subscriptionId: selectedSubscription.id,
+        amount,
+        method,
+        discountType,
+      });
+      setMsg("ชำระเงินสำเร็จและอัปเดตประวัติเรียบร้อยแล้ว");
+      await loadData(memberId, selectedSubscription.id);
     } catch (err: any) {
-      setMsg(err?.response?.data?.message || "Payment failed");
+      setMsg(err?.response?.data?.message || "ชำระเงินไม่สำเร็จ");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute roles={["MEMBER"]}>
       <Navbar />
       <main className="page-shell">
         <div className="container">
-          <div className="form-card">
-            <h2>Process Payment</h2>
-            <p className="auth-subtitle">Complete a payment and apply the correct discount rule.</p>
-            <form onSubmit={submit} className="form-grid">
-              <div className="two-col">
-                <input className="input" placeholder="Member ID" value={form.memberId} onChange={(e) => setForm({ ...form, memberId: e.target.value })} />
-                <input className="input" placeholder="Subscription ID" value={form.subscriptionId} onChange={(e) => setForm({ ...form, subscriptionId: e.target.value })} />
-              </div>
-              <input className="input" placeholder="Amount" type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
-
-              <div className="two-col">
-                <select className="select" value={form.method} onChange={(e) => setForm({ ...form, method: e.target.value })}>
-                  <option value="CREDIT_CARD">Credit Card</option>
-                  <option value="PROMPTPAY">PromptPay</option>
-                </select>
-
-                <select className="select" value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value })}>
-                  <option value="none">No discount</option>
-                  <option value="student">Student</option>
-                  <option value="renewal">Renewal</option>
-                </select>
-              </div>
-
-              <button className="form-btn" type="submit">Pay now</button>
-            </form>
-            <div className={`notice ${msg ? (msg.toLowerCase().includes("paid") ? "success" : "error") : ""}`}>{msg}</div>
+          <div className="page-header-row">
+            <div>
+              <p className="eyebrow">Payments</p>
+              <h1 className="page-title">Confirm membership payment</h1>
+            </div>
           </div>
+
+          {loading ? (
+            <div className="form-card">กำลังโหลดข้อมูล...</div>
+          ) : (
+            <div className="journey-grid">
+              <div className="form-card">
+                <h2>Process Payment</h2>
+                <p className="auth-subtitle">ผูกการชำระเงินเข้ากับแพ็กเกจจริงและคำนวณส่วนลดก่อนสรุปยอดสุทธิ</p>
+                <form onSubmit={submit} className="form-grid">
+                  <select className="select" value={subscriptionId} onChange={(e) => setSubscriptionId(e.target.value)}>
+                    {subscriptions.map((subscription) => (
+                      <option key={subscription.id} value={subscription.id}>
+                        {subscription.planName} • เหลือ {subscription.remainingSessions} sessions
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="two-col">
+                    <select className="select" value={method} onChange={(e) => setMethod(e.target.value)}>
+                      <option value="CREDIT_CARD">Credit Card</option>
+                      <option value="PROMPTPAY">PromptPay</option>
+                    </select>
+
+                    <select className="select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+                      <option value="none">No discount</option>
+                      <option value="student">Student discount</option>
+                      <option value="renewal">Renewal discount</option>
+                    </select>
+                  </div>
+
+                  <div className="summary-card summary-inline-card">
+                    <div className="summary-row"><span>ยอดก่อนลด</span><strong>{amount.toLocaleString()} บาท</strong></div>
+                    <div className="summary-row"><span>ส่วนลด</span><strong>{discountAmount.toLocaleString()} บาท</strong></div>
+                    <div className="summary-row total"><span>ยอดสุทธิ</span><strong>{finalAmount.toLocaleString()} บาท</strong></div>
+                  </div>
+
+                  <button className="form-btn" type="submit" disabled={submitting || !selectedSubscription}>
+                    {submitting ? "กำลังประมวลผล..." : "ชำระเงินและบันทึกประวัติ"}
+                  </button>
+                </form>
+                <div className={`notice ${msg ? (msg.includes("สำเร็จ") ? "success" : "error") : ""}`}>{msg}</div>
+              </div>
+
+              <div className="table-card">
+                <div className="table-header">
+                  <h2>Payment history</h2>
+                  <span>{payments.length} รายการ</span>
+                </div>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Method</th>
+                      <th>Amount</th>
+                      <th>Discount</th>
+                      <th>Final</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length > 0 ? payments.map((payment) => (
+                      <tr key={payment.id}>
+                        <td>{payment.method}</td>
+                        <td>{Number(payment.amount).toLocaleString()}</td>
+                        <td>{Number(payment.discountAmount).toLocaleString()}</td>
+                        <td>{Number(payment.finalAmount).toLocaleString()}</td>
+                        <td><span className="status-pill confirmed">{payment.status}</span></td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan={5}>ยังไม่มีประวัติการชำระเงิน</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </ProtectedRoute>

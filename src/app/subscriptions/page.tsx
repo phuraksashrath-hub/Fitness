@@ -1,117 +1,185 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import api, { getCurrentUserFromToken, setAuthToken } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { useRouter } from "next/navigation";
-
-const planCatalog = [
-  { id: "11111111-1111-1111-1111-111111111111", label: "Basic", price: 1550 },
-  { id: "22222222-2222-2222-2222-222222222222", label: "Standard", price: 2490 },
-  { id: "33333333-3333-3333-3333-333333333333", label: "Premium", price: 3990 },
-];
+import {
+  createMemberSubscription,
+  getCurrentUserFromToken,
+  getMemberSubscriptions,
+  getPublicPlans,
+  MembershipPlan,
+  setAuthToken,
+  SubscriptionSummary,
+} from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SubscriptionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [memberId, setMemberId] = useState("");
-  const [planId, setPlanId] = useState(planCatalog[0].id);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
+  const [planId, setPlanId] = useState("");
   const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUserFromToken();
+    const token = localStorage.getItem("token");
+
     if (!user?.memberId) {
       router.push("/login");
       return;
     }
+
     setMemberId(user.memberId);
-    setAuthToken(localStorage.getItem("token") || "");
-  }, [router]);
+    setAuthToken(token);
+
+    Promise.all([getPublicPlans(), getMemberSubscriptions(user.memberId)])
+      .then(([plansRes, subscriptionRes]) => {
+        const planData = plansRes.data || [];
+        const currentPlanId = searchParams.get("planId") || planData[0]?.id || "";
+        setPlans(planData);
+        setPlanId(currentPlanId);
+        setSubscriptions(subscriptionRes.data || []);
+      })
+      .catch(() => setMsg("ไม่สามารถโหลดข้อมูลแพ็กเกจได้"))
+      .finally(() => setLoading(false));
+  }, [router, searchParams]);
+
+  const selectedPlan = useMemo(() => plans.find((item) => item.id === planId) || plans[0], [planId, plans]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!memberId || !planId) return;
+
+    setSubmitting(true);
     setMsg("");
 
     try {
-      const token = localStorage.getItem("token");
-      if (token) setAuthToken(token);
-
-      const res = await api.post("/subscriptions", { memberId, planId });
-      setMsg(`สมัครสมาชิกสำเร็จ: ${res.data.planName || "Membership"} • ${res.data.id}`);
+      const res = await createMemberSubscription({ memberId, planId });
+      setMsg("เปิดใช้งานแพ็กเกจสำเร็จ กำลังพาไปหน้าชำระเงิน");
+      router.push(`/payments?subscriptionId=${res.data.id}`);
     } catch (err: any) {
-      setMsg(err?.response?.data?.message || "สมัครสมาชิกไม่สำเร็จ");
+      setMsg(err?.response?.data?.message || "สมัครแพ็กเกจไม่สำเร็จ");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute roles={["MEMBER"]}>
       <main className="detail-page-shell">
         <div className="detail-page-card detail-form-card">
           <div className="detail-page-topbar">
-            <button className="detail-back-link" type="button" onClick={() => router.push("/")} style={{ background: "none", border: "none", cursor: "pointer" }}>
-              ← กลับหน้าแรก
+            <button className="detail-back-link" type="button" onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", cursor: "pointer" }}>
+              ← กลับแดชบอร์ด
             </button>
-            <span className="detail-badge">สมัครแพ็กเกจ</span>
+            <span className="detail-badge">เลือกแพ็กเกจ</span>
           </div>
 
           <div className="detail-hero compact">
             <div>
-              <p className="eyebrow">Membership</p>
-              <h1>เลือกแผนที่เหมาะกับไลฟ์สไตล์ของคุณ</h1>
+              <p className="eyebrow">Subscription</p>
+              <h1>ยืนยันแพ็กเกจเพื่อเริ่มต้นเส้นทางการฝึกของคุณ</h1>
             </div>
             <div className="mini-stat">
-              <span>สมาชิก</span>
-              <strong>{memberId ? "พร้อม" : "..."}</strong>
-              <small>ยืนยันตัวตนแล้ว</small>
+              <span>สถานะ</span>
+              <strong>{subscriptions.some((item) => item.status === "ACTIVE") ? "ACTIVE" : "NEW"}</strong>
+              <small>พร้อมเปิดสิทธิ์ทันที</small>
             </div>
           </div>
 
-          <form onSubmit={submit} className="membership-form-layout">
-            <div className="membership-column form-column">
-              <h3>แผนสมาชิก</h3>
-
-              <div className="field-grid">
-                <label>
-                  <span>Member ID</span>
-                  <input value={memberId} onChange={(e) => setMemberId(e.target.value)} placeholder="กรอก member id" />
-                </label>
+          {loading ? (
+            <p style={{ padding: 24 }}>กำลังโหลดแพ็กเกจ...</p>
+          ) : (
+            <>
+              <div className="plan-select-grid">
+                {plans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    className={`plan-option ${planId === plan.id ? "active" : ""}`}
+                    onClick={() => setPlanId(plan.id)}
+                  >
+                    <strong>{plan.planName}</strong>
+                    <span>{Number(plan.price).toLocaleString()} บาท / {plan.durationDays} วัน</span>
+                    <small>{plan.maxSessionsPerMonth} session ต่อรอบบิล</small>
+                  </button>
+                ))}
               </div>
 
-              <div className="field-grid">
-                <label>
-                  <span>เลือกแผน</span>
-                  <select value={planId} onChange={(e) => setPlanId(e.target.value)}>
-                    {planCatalog.map((plan) => (
-                      <option key={plan.id} value={plan.id}>{plan.label} • {plan.price.toLocaleString()} บาท</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <form onSubmit={submit} className="membership-form-layout">
+                <div className="membership-column form-column">
+                  <h3>ข้อมูลสมาชิก</h3>
 
-              {msg && <p className={msg.includes("สำเร็จ") ? "auth-success" : "auth-error"}>{msg}</p>}
-            </div>
+                  <div className="field-grid">
+                    <label>
+                      <span>Member ID</span>
+                      <input value={memberId} readOnly />
+                    </label>
+                  </div>
 
-            <div className="membership-column summary-column">
-              <h3>สรุปแผน</h3>
-              <div className="summary-list">
-                <div className="summary-row">
-                  <span>แผน</span>
-                  <strong>{planCatalog.find((p) => p.id === planId)?.label || "Basic"}</strong>
+                  <div className="field-grid">
+                    <label>
+                      <span>แพ็กเกจที่เลือก</span>
+                      <input value={selectedPlan?.planName || "-"} readOnly />
+                    </label>
+                  </div>
+
+                  {msg && <p className={msg.includes("สำเร็จ") ? "auth-success" : "auth-error"}>{msg}</p>}
                 </div>
-                <div className="summary-row">
-                  <span>ราคา</span>
-                  <strong>{planCatalog.find((p) => p.id === planId)?.price.toLocaleString() || "1,550"} บาท</strong>
-                </div>
-              </div>
 
-              <button className="membership-submit" type="submit" disabled={loading}>
-                {loading ? "กำลังสมัคร..." : "ยืนยันสมัครสมาชิก"}
-              </button>
-            </div>
-          </form>
+                <div className="membership-column summary-column">
+                  <h3>สรุปแพ็กเกจ</h3>
+                  <div className="summary-list">
+                    <div className="summary-row">
+                      <span>ชื่อแพ็กเกจ</span>
+                      <strong>{selectedPlan?.planName || "-"}</strong>
+                    </div>
+                    <div className="summary-row">
+                      <span>ราคา</span>
+                      <strong>{selectedPlan ? Number(selectedPlan.price).toLocaleString() : "0"} บาท</strong>
+                    </div>
+                    <div className="summary-row">
+                      <span>ระยะเวลา</span>
+                      <strong>{selectedPlan?.durationDays || 0} วัน</strong>
+                    </div>
+                    <div className="summary-row total">
+                      <span>สิทธิ์ session</span>
+                      <strong>{selectedPlan?.maxSessionsPerMonth || 0} ครั้ง</strong>
+                    </div>
+                  </div>
+
+                  <button className="membership-submit" type="submit" disabled={submitting || !selectedPlan}>
+                    {submitting ? "กำลังเปิดใช้งาน..." : "ยืนยันแพ็กเกจและไปชำระเงิน"}
+                  </button>
+                </div>
+              </form>
+
+              <section className="history-panel">
+                <div className="history-panel-header">
+                  <h3>แพ็กเกจที่เคยใช้งาน</h3>
+                  <span>{subscriptions.length} รายการ</span>
+                </div>
+                <div className="history-list">
+                  {subscriptions.length > 0 ? subscriptions.map((subscription) => (
+                    <article key={subscription.id} className="history-item">
+                      <div>
+                        <strong>{subscription.planName}</strong>
+                        <p>{subscription.startDate} - {subscription.endDate}</p>
+                      </div>
+                      <div>
+                        <span className={`status-chip ${subscription.status.toLowerCase()}`}>{subscription.status}</span>
+                        <small>{subscription.remainingSessions} sessions left</small>
+                      </div>
+                    </article>
+                  )) : <p>ยังไม่มีประวัติแพ็กเกจ</p>}
+                </div>
+              </section>
+            </>
+          )}
         </div>
       </main>
     </ProtectedRoute>

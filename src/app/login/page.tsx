@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import api, { decodeJwtPayload, setAuthToken } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@palmfitness.com");
   const [password, setPassword] = useState("admin123");
   const [msg, setMsg] = useState("");
@@ -25,8 +26,15 @@ export default function LoginPage() {
 
       const payload = decodeJwtPayload(token);
       const role = payload?.role || payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || "MEMBER";
+      const planId = searchParams.get("planId");
 
-      router.push(role === "ADMIN" ? "/admin" : "/dashboard");
+      if (role === "ADMIN") {
+        router.push("/admin");
+      } else if (planId) {
+        router.push(`/subscriptions?planId=${planId}`);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setMsg(err?.response?.data?.message || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่");
     } finally {
@@ -40,7 +48,7 @@ export default function LoginPage() {
         <div className="login-visual">
           <div className="login-badge">PALM FITNESS</div>
           <h1>Welcome back</h1>
-          <p>ออกกำลังกายต่อเนื่องกับระบบที่ติดตามความก้าวหน้าและการใช้งานจริง</p>
+          <p>ล็อกอินเพื่อซื้อแพ็กเกจ ชำระเงิน จองเทรนเนอร์ และติดตามความก้าวหน้า</p>
         </div>
 
         <div className="login-panel">
@@ -48,6 +56,12 @@ export default function LoginPage() {
             <span>เข้าสู่ระบบ</span>
             <Link href="/" className="text-link">กลับหน้าหลัก</Link>
           </div>
+
+          {searchParams.get("planId") && (
+            <p className="auth-success" style={{ marginBottom: 16 }}>
+              สมัครสมาชิกแล้ว เหลือเพียงล็อกอินเพื่อยืนยันแพ็กเกจและชำระเงิน
+            </p>
+          )}
 
           <form onSubmit={onLogin} className="login-form">
             <label>

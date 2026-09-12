@@ -6,9 +6,24 @@ import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 const plans = [
-  { id: "11111111-1111-1111-1111-111111111111", name: "Basic", price: 1550, perk: "เข้าฟิตได้ 24 ชั่วโมง" },
-  { id: "22222222-2222-2222-2222-222222222222", name: "Standard", price: 2490, perk: "คอร์สยืดเหยียด + คำปรึกษาเทรนเนอร์" },
-  { id: "33333333-3333-3333-3333-333333333333", name: "Premium", price: 3990, perk: "เทรนเนอร์ส่วนตัว + คลาสพิเศษ" },
+  {
+    id: "11111111-1111-1111-1111-111111111111",
+    name: "Basic",
+    price: 1550,
+    perk: "เข้าใช้ฟิตเนส 24 ชั่วโมง พร้อมติดตามความก้าวหน้า",
+  },
+  {
+    id: "22222222-2222-2222-2222-222222222222",
+    name: "Standard",
+    price: 2490,
+    perk: "ยืดเหยียดรายสัปดาห์ + คำปรึกษาจากเทรนเนอร์",
+  },
+  {
+    id: "33333333-3333-3333-3333-333333333333",
+    name: "Premium",
+    price: 3990,
+    perk: "เทรนเนอร์ส่วนตัว 2 ครั้ง/เดือน + คลาสพิเศษ",
+  },
 ];
 
 export default function MembershipPage() {
@@ -22,7 +37,7 @@ export default function MembershipPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(plans[0]);
+  const [selectedPlan, setSelectedPlan] = useState(plans[1]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -50,10 +65,9 @@ export default function MembershipPage() {
       });
 
       setIsSuccess(true);
-      setMsg("สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ");
-
+      setMsg("สมัครสมาชิกสำเร็จ กำลังพาไปล็อกอินเพื่อยืนยันแพ็กเกจ");
       setTimeout(() => {
-        router.push("/login");
+        router.push(`/login?planId=${selectedPlan.id}`);
       }, 900);
     } catch (error: any) {
       setIsSuccess(false);
@@ -74,10 +88,10 @@ export default function MembershipPage() {
         <div className="detail-hero compact">
           <div>
             <p className="eyebrow">Palm Fitness</p>
-            <h1>เริ่มต้นการเปลี่ยนแปลงของคุณวันนี้</h1>
+            <h1>สมัครวันนี้ แล้วต่อ flow ซื้อแพ็กเกจได้ทันที</h1>
           </div>
           <div className="mini-stat">
-            <span>ค่าเริ่มต้น</span>
+            <span>แพ็กเกจแนะนำ</span>
             <strong>{selectedPlan.price.toLocaleString()}</strong>
             <small>บาท/เดือน</small>
           </div>
@@ -127,31 +141,25 @@ export default function MembershipPage() {
               </label>
             </div>
 
-            <div className="field-grid">
+            <div className="field-grid two-col compact">
               <label>
                 <span>รหัสผ่าน *</span>
                 <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="กรอกรหัสผ่าน" />
               </label>
-            </div>
-
-            <div className="field-grid">
               <label>
                 <span>ยืนยันรหัสผ่าน *</span>
                 <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="ยืนยันรหัสผ่าน" />
               </label>
             </div>
 
-            <div className="field-grid">
+            <div className="field-grid two-col compact">
               <label>
-                <span>สาขา *</span>
-                <input type="text" value="สาขาเขตกรุงเทพ" readOnly />
+                <span>สาขา</span>
+                <input type="text" value="Palm Fitness กรุงเทพ" readOnly />
               </label>
-            </div>
-
-            <div className="field-grid">
               <label>
-                <span>รหัสบัตรประชาชน *</span>
-                <input type="text" placeholder="กรุณากรอกรหัสบัตรประชาชน" />
+                <span>สถานะสมาชิก</span>
+                <input type="text" value="พร้อมเริ่มใช้งาน" readOnly />
               </label>
             </div>
 
@@ -159,61 +167,40 @@ export default function MembershipPage() {
           </div>
 
           <div className="membership-column summary-column">
-            <h3>สรุป</h3>
+            <h3>สรุป flow</h3>
 
             <div className="summary-list">
               <div className="summary-row">
-                <span>แผนที่เลือก</span>
+                <span>แพ็กเกจที่เลือก</span>
                 <strong>{selectedPlan.name}</strong>
               </div>
               <div className="summary-row">
-                <span>ค่าเริ่มต้น</span>
+                <span>ราคาเริ่มต้น</span>
                 <strong>{selectedPlan.price.toLocaleString()} บาท</strong>
               </div>
               <div className="summary-row">
-                <span>ส่วนลด</span>
-                <strong>0</strong>
+                <span>สิทธิ์เด่น</span>
+                <strong>{selectedPlan.perk}</strong>
               </div>
               <div className="summary-row total">
-                <span>ยอดชำระ</span>
-                <strong>{selectedPlan.price.toLocaleString()} บาท</strong>
+                <span>ขั้นตอนถัดไป</span>
+                <strong>Login → Confirm Plan → Payment</strong>
               </div>
             </div>
 
             <div className="summary-card">
               <div className="payment-box">
-                <label className="radio-row">
-                  <input type="radio" name="payment" defaultChecked />
-                  <span>บัตรเครดิต</span>
-                </label>
-                <label className="radio-row">
-                  <input type="radio" name="payment" />
-                  <span>พร้อมเพย์</span>
-                </label>
-              </div>
-
-              <div className="payment-detail">
-                <div className="field-grid">
-                  <label>
-                    <span>หมายเลขบัตร *</span>
-                    <input type="text" placeholder="1234 5678 9012 3456" />
-                  </label>
-                </div>
-                <div className="field-grid two-col compact">
-                  <label>
-                    <span>วันหมดอายุ *</span>
-                    <input type="text" placeholder="MM/YY" />
-                  </label>
-                  <label>
-                    <span>CVV *</span>
-                    <input type="text" placeholder="***" />
-                  </label>
-                </div>
+                <p style={{ margin: 0, fontWeight: 700 }}>สิ่งที่จะได้หลังสมัคร</p>
+                <ul style={{ margin: "12px 0 0", paddingLeft: 18, lineHeight: 1.8 }}>
+                  <li>บัญชีสมาชิกพร้อมใช้งาน</li>
+                  <li>เลือกและยืนยันแพ็กเกจจริง</li>
+                  <li>จองเทรนเนอร์หลังชำระเงิน</li>
+                </ul>
               </div>
             </div>
 
             <button type="submit" className="membership-submit" disabled={loading}>
-              {loading ? "กำลังยืนยัน..." : "ยืนยัน"}
+              {loading ? "กำลังยืนยัน..." : "สมัครสมาชิกและไปต่อ"}
             </button>
           </div>
         </form>

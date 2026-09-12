@@ -2322,3 +2322,195 @@ select:focus {
   }
 }
 
+
+.journey-grid,
+.journey-step-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.journey-step-card,
+.trainer-card,
+.faq-card,
+.history-item,
+.summary-inline-card,
+.dashboard-summary-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  border-radius: 24px;
+  box-shadow: var(--jet-shadow);
+}
+
+.journey-step-card {
+  padding: 24px;
+}
+
+.journey-step-card span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(213, 16, 45, 0.1);
+  color: var(--jet-red);
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.trainer-grid,
+.faq-list,
+.history-list {
+  display: grid;
+  gap: 18px;
+}
+
+.trainer-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.trainer-card,
+.faq-card {
+  padding: 24px;
+}
+
+.trainer-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--jet-red) 0%, #ff5f74 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.trainer-card span {
+  display: block;
+  margin: 8px 0 12px;
+  color: var(--jet-red);
+  font-weight: 700;
+}
+
+.faq-list,
+.history-list {
+  grid-template-columns: 1fr;
+}
+
+.faq-card h3,
+.trainer-card h3,
+.journey-step-card h3 {
+  margin: 0 0 10px;
+}
+
+.history-panel {
+  margin-top: 32px;
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--jet-shadow);
+}
+
+.history-panel-header,
+.table-actions,
+.inline-editor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-panel-header {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.history-item {
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.history-item p {
+  margin: 6px 0 0;
+  color: var(--jet-muted);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.08);
+  font-weight: 800;
+  font-size: 0.74rem;
+}
+
+.status-chip.active,
+.status-chip.booked {
+  background: rgba(34, 197, 94, 0.14);
+  color: #117a35;
+}
+
+.status-chip.cancelled {
+  background: rgba(213, 16, 45, 0.12);
+  color: var(--jet-red);
+}
+
+.journey-grid {
+  margin-top: 22px;
+}
+
+.summary-inline-card,
+.dashboard-summary-card {
+  padding: 18px 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.inline-editor {
+  padding: 12px 0;
+  flex-wrap: wrap;
+}
+
+.table-action-button {
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.08);
+  color: #111;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.table-action-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.table-action-button.danger {
+  background: rgba(213, 16, 45, 0.12);
+  color: var(--jet-red);
+}
+
+.narrow-container {
+  max-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .journey-grid,
+  .journey-step-grid,
+  .trainer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-item {
+    flex-direction: column;
+  }
+}

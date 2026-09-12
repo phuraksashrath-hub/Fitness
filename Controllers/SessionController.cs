@@ -11,6 +11,10 @@ public class SessionController : ControllerBase
     private readonly BookingService _service;
     public SessionController(BookingService service) => _service = service;
 
+    [HttpGet("trainers")]
+    public async Task<IActionResult> Trainers()
+        => Ok(await _service.GetTrainerCatalogAsync());
+
     [HttpPost("book")]
     public async Task<IActionResult> Book([FromBody] BookSessionDto dto)
         => Ok(await _service.BookAsync(dto));
