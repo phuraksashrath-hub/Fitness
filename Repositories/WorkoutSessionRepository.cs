@@ -16,9 +16,10 @@ public class WorkoutSessionRepository : Repository<WorkoutSession>, IWorkoutSess
             .ToListAsync();
     }
 
-    public async Task<bool> HasTrainerConflict(Guid trainerId, DateOnly date, TimeOnly start, TimeOnly end)
+    public async Task<bool> HasTrainerConflict(Guid trainerId, DateOnly date, TimeOnly start, TimeOnly end, Guid? excludeSessionId = null)
     {
         return await _db.WorkoutSessions.AnyAsync(s =>
+            (!excludeSessionId.HasValue || s.Id != excludeSessionId.Value) &&
             s.TrainerId == trainerId &&
             s.SessionDate == date &&
             s.Status == "BOOKED" &&

@@ -113,14 +113,12 @@ public class BookingService
             session.StartTime == dto.StartTime &&
             session.EndTime == dto.EndTime;
 
-        var conflict = !sameSlot && await _db.WorkoutSessions.AnyAsync(s =>
-            s.Id != session.Id &&
-            s.TrainerId == session.TrainerId &&
-            s.SessionDate == dto.SessionDate &&
-            s.Status == "BOOKED" &&
-            ((dto.StartTime >= s.StartTime && dto.StartTime < s.EndTime) ||
-             (dto.EndTime > s.StartTime && dto.EndTime <= s.EndTime) ||
-             (dto.StartTime <= s.StartTime && dto.EndTime >= s.EndTime)));
+        var conflict = !sameSlot && await _sessionRepo.HasTrainerConflict(
+            session.TrainerId,
+            dto.SessionDate,
+            dto.StartTime,
+            dto.EndTime,
+            session.Id);
         if (conflict) throw new Exception("Trainer timeslot conflict");
 
         session.SessionDate = dto.SessionDate;

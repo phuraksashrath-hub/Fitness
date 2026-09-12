@@ -165,7 +165,7 @@ public class AdminService
         await _db.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<object>> GetDashboardSummaryAsync()
+    public async Task<IEnumerable<AdminDashboardMetricDto>> GetDashboardSummaryAsync()
     {
         var totalMembers = await _db.Members.CountAsync();
         var totalTrainers = await _db.Trainers.CountAsync();
@@ -175,11 +175,11 @@ public class AdminService
 
         return new[]
         {
-            new { label = "Members", value = (decimal)totalMembers },
-            new { label = "Trainers", value = (decimal)totalTrainers },
-            new { label = "Plans", value = (decimal)totalPlans },
-            new { label = "Subscriptions", value = (decimal)totalSubscriptions },
-            new { label = "Revenue", value = totalRevenue }
+            new AdminDashboardMetricDto("Members", totalMembers),
+            new AdminDashboardMetricDto("Trainers", totalTrainers),
+            new AdminDashboardMetricDto("Plans", totalPlans),
+            new AdminDashboardMetricDto("Subscriptions", totalSubscriptions),
+            new AdminDashboardMetricDto("Revenue", totalRevenue)
         };
     }
 

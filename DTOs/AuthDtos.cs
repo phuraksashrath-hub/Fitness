@@ -11,3 +11,4 @@ public record CreatePlanDto(string PlanName, int DurationDays, decimal Price, in
 public record AdminTrainerDto(Guid Id, string FullName, string Email, string Specialty, string Role);
 public record UpdateTrainerDto(string FullName, string Email, string Specialty, string Role);
 public record CreateTrainerDto(string FullName, string Email, string Password, string Specialty);
+public record AdminDashboardMetricDto(string Label, decimal Value);

@@ -37,7 +37,7 @@ export default function MembershipPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(plans[1]);
+  const [selectedPlan, setSelectedPlan] = useState(plans[0]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

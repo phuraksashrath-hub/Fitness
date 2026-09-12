@@ -13,11 +13,12 @@ public class SessionController : ControllerBase
     public SessionController(BookingService service) => _service = service;
 
     [HttpGet("trainers")]
-    [Authorize(Roles = "MEMBER")]
+    [Authorize(Roles = "MEMBER,ADMIN")]
     public async Task<IActionResult> Trainers()
         => Ok(await _service.GetTrainerCatalogAsync());
 
     [HttpPost("book")]
+    [Authorize(Roles = "MEMBER,ADMIN")]
     public async Task<IActionResult> Book([FromBody] BookSessionDto dto)
     {
         var access = ResolveMemberId(dto.MemberId);
@@ -27,6 +28,7 @@ public class SessionController : ControllerBase
     }
 
     [HttpGet("me")]
+    [Authorize(Roles = "MEMBER,ADMIN")]
     public async Task<IActionResult> MySessions([FromQuery] Guid memberId)
     {
         var access = ResolveMemberId(memberId);
@@ -36,6 +38,7 @@ public class SessionController : ControllerBase
     }
 
     [HttpPut("{id}/cancel")]
+    [Authorize(Roles = "MEMBER,ADMIN")]
     public async Task<IActionResult> Cancel(Guid id)
     {
         var access = ResolveMemberId(Guid.Empty);
@@ -46,6 +49,7 @@ public class SessionController : ControllerBase
     }
 
     [HttpPut("{id}/reschedule")]
+    [Authorize(Roles = "MEMBER,ADMIN")]
     public async Task<IActionResult> Reschedule(Guid id, [FromBody] RescheduleDto dto)
     {
         var access = ResolveMemberId(Guid.Empty);
