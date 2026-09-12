@@ -11,6 +11,8 @@ import {
   createAdminTrainer,
   DashboardMetric,
   deleteAdminMember,
+  deleteAdminTrainer,
+  exportAdminReport,
   getAdminMembers,
   getAdminPayments,
   getAdminPlans,
@@ -31,6 +33,8 @@ const tabs = ["Overview", "Members", "Plans", "Trainers", "Subscriptions", "Paym
 
 type TabKey = (typeof tabs)[number];
 
+type ExportType = "members" | "trainers" | "subscriptions" | "payments";
+
 export default function AdminPage() {
   const [user, setUser] = useState<{ fullName: string; email: string; role: string } | null>(null);
   const [summary, setSummary] = useState<DashboardMetric[]>([]);
@@ -44,6 +48,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>("Overview");
   const [notice, setNotice] = useState("");
+  const [busyAction, setBusyAction] = useState<string>("");
 
   const loadAdminData = async () => {
     const [summaryRes, membersRes, plansRes, trainersRes, subscriptionsRes, paymentsRes] = await Promise.all([
@@ -76,21 +81,36 @@ export default function AdminPage() {
   const summaryMap = useMemo(() => Object.fromEntries(summary.map((item) => [item.label, item.value])), [summary]);
   const revenueValue = Number(summaryMap.Revenue || 0).toLocaleString();
 
+  const withAction = async (key: string, action: () => Promise<void>) => {
+    try {
+      setBusyAction(key);
+      await action();
+    } catch (err: any) {
+      setNotice(err?.response?.data?.message || "ดำเนินการไม่สำเร็จ");
+    } finally {
+      setBusyAction("");
+    }
+  };
+
   const handleMemberChange = async (id: string, field: keyof AdminMember, value: string) => {
     const target = members.find((item) => item.id === id);
     if (!target) return;
 
     const updated = { ...target, [field]: value };
-    const payload = { fullName: updated.fullName, email: updated.email, phone: updated.phone, role: updated.role };
-    await updateAdminMember(id, payload);
-    setMembers((prev) => prev.map((item) => (item.id === id ? updated : item)));
-    setNotice("อัปเดตข้อมูลสมาชิกแล้ว");
+    await withAction(`member-${id}`, async () => {
+      const payload = { fullName: updated.fullName, email: updated.email, phone: updated.phone, role: updated.role };
+      await updateAdminMember(id, payload);
+      setMembers((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      setNotice("อัปเดตข้อมูลสมาชิกแล้ว");
+    });
   };
 
   const handleDeleteMember = async (id: string) => {
-    await deleteAdminMember(id);
-    setMembers((prev) => prev.filter((item) => item.id !== id));
-    setNotice("ลบสมาชิกแล้ว");
+    await withAction(`member-delete-${id}`, async () => {
+      await deleteAdminMember(id);
+      setMembers((prev) => prev.filter((item) => item.id !== id));
+      setNotice("ลบสมาชิกแล้ว");
+    });
   };
 
   const handlePlanChange = async (id: string, field: keyof MembershipPlan, value: string | number) => {
@@ -98,22 +118,26 @@ export default function AdminPage() {
     if (!target) return;
 
     const updated = { ...target, [field]: value };
-    await updateAdminPlan(id, {
-      planName: updated.planName,
-      durationDays: Number(updated.durationDays),
-      price: Number(updated.price),
-      maxSessionsPerMonth: Number(updated.maxSessionsPerMonth),
+    await withAction(`plan-${id}`, async () => {
+      await updateAdminPlan(id, {
+        planName: updated.planName,
+        durationDays: Number(updated.durationDays),
+        price: Number(updated.price),
+        maxSessionsPerMonth: Number(updated.maxSessionsPerMonth),
+      });
+      setPlans((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      setNotice("อัปเดตแพ็กเกจแล้ว");
     });
-    setPlans((prev) => prev.map((item) => (item.id === id ? updated : item)));
-    setNotice("อัปเดตแพ็กเกจแล้ว");
   };
 
   const handleCreatePlan = async () => {
     if (!newPlan.planName.trim()) return;
-    const res = await createAdminPlan(newPlan);
-    setPlans((prev) => [...prev, res.data]);
-    setNewPlan(emptyPlan);
-    setNotice("เพิ่มแพ็กเกจใหม่แล้ว");
+    await withAction("plan-create", async () => {
+      const res = await createAdminPlan(newPlan);
+      setPlans((prev) => [...prev, res.data]);
+      setNewPlan(emptyPlan);
+      setNotice("เพิ่มแพ็กเกจใหม่แล้ว");
+    });
   };
 
   const handleTrainerChange = async (id: string, field: keyof AdminTrainer, value: string) => {
@@ -121,22 +145,41 @@ export default function AdminPage() {
     if (!target) return;
 
     const updated = { ...target, [field]: value };
-    await updateAdminTrainer(id, {
-      fullName: updated.fullName,
-      email: updated.email,
-      specialty: updated.specialty,
-      role: updated.role,
+    await withAction(`trainer-${id}`, async () => {
+      await updateAdminTrainer(id, {
+        fullName: updated.fullName,
+        email: updated.email,
+        specialty: updated.specialty,
+        role: updated.role,
+      });
+      setTrainers((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      setNotice("อัปเดต trainer แล้ว");
     });
-    setTrainers((prev) => prev.map((item) => (item.id === id ? updated : item)));
-    setNotice("อัปเดต trainer แล้ว");
   };
 
   const handleCreateTrainer = async () => {
     if (!newTrainer.fullName.trim() || !newTrainer.email.trim()) return;
-    const res = await createAdminTrainer(newTrainer);
-    setTrainers((prev) => [...prev, res.data]);
-    setNewTrainer(emptyTrainer);
-    setNotice("เพิ่ม trainer ใหม่แล้ว");
+    await withAction("trainer-create", async () => {
+      const res = await createAdminTrainer(newTrainer);
+      setTrainers((prev) => [...prev, res.data]);
+      setNewTrainer(emptyTrainer);
+      setNotice("เพิ่ม trainer ใหม่แล้ว");
+    });
+  };
+
+  const handleDeleteTrainer = async (id: string) => {
+    await withAction(`trainer-delete-${id}`, async () => {
+      await deleteAdminTrainer(id);
+      setTrainers((prev) => prev.filter((item) => item.id !== id));
+      setNotice("ลบ trainer แล้ว");
+    });
+  };
+
+  const handleExport = async (type: ExportType) => {
+    await withAction(`export-${type}`, async () => {
+      await exportAdminReport(type);
+      setNotice(`ดาวน์โหลดรายงาน ${type} แล้ว`);
+    });
   };
 
   if (loading) return <div style={{ padding: 24 }}>กำลังโหลดข้อมูล...</div>;
@@ -150,7 +193,7 @@ export default function AdminPage() {
             <div className="control-hero-copy">
               <span className="control-tag">Palm control room</span>
               <h1>Admin Management</h1>
-              <p>ขยายหลังบ้านให้คุมสมาชิก แพ็กเกจ trainer การสมัคร และรายการชำระเงินในสไตล์ที่ใกล้ภาพอ้างอิงมากขึ้น</p>
+              <p>ขยายหลังบ้านให้คุมสมาชิก แพ็กเกจ trainer การสมัคร รายการชำระเงิน และ export report ในสไตล์ที่ใกล้ภาพอ้างอิงมากขึ้น</p>
             </div>
             <div className="control-ribbon-card">
               <span>Signed in as</span>
@@ -181,7 +224,7 @@ export default function AdminPage() {
               <article className="control-panel dark-panel">
                 <div className="control-panel-head">
                   <div><span className="panel-kicker">Fresh activity</span><h2>Latest payments</h2></div>
-                  <span>{payments.length} total</span>
+                  <button type="button" className="table-action-button export-button" onClick={() => handleExport("payments")} disabled={busyAction === "export-payments"}>Export payments</button>
                 </div>
                 <div className="schedule-list compact-list">
                   {payments.slice(0, 5).map((payment) => (
@@ -202,6 +245,10 @@ export default function AdminPage() {
               <article className="control-panel">
                 <div className="control-panel-head">
                   <div><span className="panel-kicker">Operations</span><h2>Live system snapshot</h2></div>
+                  <div className="table-actions">
+                    <button type="button" className="table-action-button" onClick={() => handleExport("members")} disabled={busyAction === "export-members"}>Members CSV</button>
+                    <button type="button" className="table-action-button" onClick={() => handleExport("subscriptions")} disabled={busyAction === "export-subscriptions"}>Subscriptions CSV</button>
+                  </div>
                 </div>
                 <div className="journey-step-grid">
                   <article className="journey-step-card"><span>01</span><h3>Members</h3><p>{members.length} accounts พร้อมให้แก้ role และข้อมูลติดต่อ</p></article>
@@ -214,7 +261,7 @@ export default function AdminPage() {
 
           {activeTab === "Members" && (
             <section className="control-panel">
-              <div className="control-panel-head"><div><span className="panel-kicker">Member management</span><h2>จัดการสมาชิก</h2></div></div>
+              <div className="control-panel-head"><div><span className="panel-kicker">Member management</span><h2>จัดการสมาชิก</h2></div><button type="button" className="table-action-button" onClick={() => handleExport("members")} disabled={busyAction === "export-members"}>Export members</button></div>
               <div className="control-table-wrap">
                 <table className="control-table">
                   <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th /></tr></thead>
@@ -225,7 +272,7 @@ export default function AdminPage() {
                         <td><input value={member.email} onChange={(e) => handleMemberChange(member.id, "email", e.target.value)} /></td>
                         <td><input value={member.phone} onChange={(e) => handleMemberChange(member.id, "phone", e.target.value)} /></td>
                         <td><select value={member.role} onChange={(e) => handleMemberChange(member.id, "role", e.target.value)}><option value="MEMBER">MEMBER</option><option value="TRAINER">TRAINER</option><option value="ADMIN">ADMIN</option></select></td>
-                        <td><button type="button" className="table-action-button danger" onClick={() => handleDeleteMember(member.id)}>Delete</button></td>
+                        <td><button type="button" className="table-action-button danger" onClick={() => handleDeleteMember(member.id)} disabled={busyAction === `member-delete-${member.id}`}>Delete</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -242,7 +289,7 @@ export default function AdminPage() {
                 <input type="number" placeholder="Days" value={newPlan.durationDays} onChange={(e) => setNewPlan({ ...newPlan, durationDays: Number(e.target.value) })} />
                 <input type="number" placeholder="Price" value={newPlan.price} onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })} />
                 <input type="number" placeholder="Sessions" value={newPlan.maxSessionsPerMonth} onChange={(e) => setNewPlan({ ...newPlan, maxSessionsPerMonth: Number(e.target.value) })} />
-                <button type="button" className="membership-submit" onClick={handleCreatePlan}>Add plan</button>
+                <button type="button" className="membership-submit" onClick={handleCreatePlan} disabled={busyAction === "plan-create"}>Add plan</button>
               </div>
               <div className="control-table-wrap">
                 <table className="control-table">
@@ -264,13 +311,13 @@ export default function AdminPage() {
 
           {activeTab === "Trainers" && (
             <section className="control-panel">
-              <div className="control-panel-head"><div><span className="panel-kicker">Trainer management</span><h2>จัดการ trainer</h2></div></div>
+              <div className="control-panel-head"><div><span className="panel-kicker">Trainer management</span><h2>จัดการ trainer</h2></div><button type="button" className="table-action-button" onClick={() => handleExport("trainers")} disabled={busyAction === "export-trainers"}>Export trainers</button></div>
               <div className="control-create-grid trainer-create-grid">
                 <input placeholder="Full name" value={newTrainer.fullName} onChange={(e) => setNewTrainer({ ...newTrainer, fullName: e.target.value })} />
                 <input placeholder="Email" value={newTrainer.email} onChange={(e) => setNewTrainer({ ...newTrainer, email: e.target.value })} />
                 <input placeholder="Specialty" value={newTrainer.specialty} onChange={(e) => setNewTrainer({ ...newTrainer, specialty: e.target.value })} />
                 <input placeholder="Password" value={newTrainer.password} onChange={(e) => setNewTrainer({ ...newTrainer, password: e.target.value })} />
-                <button type="button" className="membership-submit" onClick={handleCreateTrainer}>Add trainer</button>
+                <button type="button" className="membership-submit" onClick={handleCreateTrainer} disabled={busyAction === "trainer-create"}>Add trainer</button>
               </div>
               <div className="trainer-grid">
                 {trainers.map((trainer) => (
@@ -282,6 +329,7 @@ export default function AdminPage() {
                     <select value={trainer.role} onChange={(e) => handleTrainerChange(trainer.id, "role", e.target.value)}>
                       <option value="TRAINER">TRAINER</option>
                     </select>
+                    <button type="button" className="table-action-button danger" onClick={() => handleDeleteTrainer(trainer.id)} disabled={busyAction === `trainer-delete-${trainer.id}`}>Delete trainer</button>
                   </article>
                 ))}
               </div>
@@ -290,7 +338,7 @@ export default function AdminPage() {
 
           {activeTab === "Subscriptions" && (
             <section className="control-panel">
-              <div className="control-panel-head"><div><span className="panel-kicker">Subscription visibility</span><h2>รายการสมัครแพ็กเกจ</h2></div></div>
+              <div className="control-panel-head"><div><span className="panel-kicker">Subscription visibility</span><h2>รายการสมัครแพ็กเกจ</h2></div><button type="button" className="table-action-button" onClick={() => handleExport("subscriptions")} disabled={busyAction === "export-subscriptions"}>Export subscriptions</button></div>
               <div className="control-table-wrap">
                 <table className="control-table">
                   <thead><tr><th>Member</th><th>Plan</th><th>Status</th><th>Remaining</th><th>Period</th></tr></thead>
@@ -312,7 +360,7 @@ export default function AdminPage() {
 
           {activeTab === "Payments" && (
             <section className="control-panel">
-              <div className="control-panel-head"><div><span className="panel-kicker">Payment records</span><h2>ประวัติการชำระเงิน</h2></div></div>
+              <div className="control-panel-head"><div><span className="panel-kicker">Payment records</span><h2>ประวัติการชำระเงิน</h2></div><button type="button" className="table-action-button" onClick={() => handleExport("payments")} disabled={busyAction === "export-payments"}>Export payments</button></div>
               <div className="control-table-wrap">
                 <table className="control-table">
                   <thead><tr><th>Member</th><th>Method</th><th>Amount</th><th>Discount</th><th>Final</th><th>Date</th></tr></thead>

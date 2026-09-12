@@ -6,8 +6,8 @@ const navItems = [
   { label: "สมาชิก", href: "/member" },
   { label: "ผู้ฝึกสอนส่วนตัว", href: "/trainer" },
   { label: "บทความ", href: "/articles" },
-  { label: "Palm App", href: "/app" },
-  { label: "สั่งการ", href: "/management" },
+  { label: "Jetts App", href: "/app" },
+  { label: "สมัครงาน", href: "/management" },
   { label: "Visitor Pass", href: "/visitor" },
 ];
 
@@ -54,13 +54,23 @@ const faqs = [
   { question: "ถ้าต้องการเลื่อนเวลาเทรนทำได้ไหม?", answer: "ทำได้จากหน้า Sessions โดยระบบจะตรวจเวลาซ้ำซ้อนของเทรนเนอร์ให้อีกครั้ง" },
 ];
 
+const promoCards = [
+  { title: "เล่นฟิตเนสฟรีเพิ่มอีก 1 เดือน", text: "สำหรับแพ็กเกจรายปีที่สมัครภายในโปรโมชัน" },
+  { title: "ฟิตหุ่นกับเทรนเนอร์ฟรี 2 ครั้ง", text: "เริ่มต้นวางแผนอย่างมั่นใจกับโค้ชมืออาชีพ" },
+];
+
+const clubHighlights = [
+  { title: "เข้าใช้ได้กว่า 300 สาขา", text: "วางตารางฝึกได้ยืดหยุ่น ไม่ว่าคุณจะอยู่ในเมืองหรือเดินทาง" },
+  { title: "ดีไซน์คลับแบบ commercial fitness", text: "ภาพรวมหน้าเว็บและภายในคลับใช้ภาษาดีไซน์ที่ชัดขึ้น ใกล้ภาพตัวอย่างมากขึ้น" },
+];
+
 export default function LandingPage() {
   return (
     <div className="jets-page">
       <header className="jets-header" id="home">
         <div className="jets-brand-wrap">
           <div className="jets-brand">
-            <span className="jets-word">Palm</span>
+            <span className="jets-word">jetts</span>
             <small>24 hour fitness</small>
           </div>
         </div>
@@ -82,6 +92,7 @@ export default function LandingPage() {
       <main className="jets-main">
         <section className="jets-hero">
           <div className="hero-visual" aria-hidden="true" />
+          <div className="hero-stripes" aria-hidden="true" />
           <div className="hero-content">
             <div className="hero-label">YOUR STRONGER SEASON</div>
             <h1>STARTS NOW</h1>
@@ -95,9 +106,16 @@ export default function LandingPage() {
               <li>ติดตาม session และประวัติการชำระเงินได้จาก dashboard</li>
             </ul>
             <div className="hero-offer">
-              <span>“เมื่อสมัครสมาชิก Palm Fitness 12 เดือน</span>
+              <span>เมื่อสมัครสมาชิก PALM FITNESS 12 เดือน</span>
               <strong>วันนี้ - 30 ก.ย. 69</strong>
               <em>*เงื่อนไขเป็นไปตามที่บริษัทกำหนด</em>
+            </div>
+          </div>
+          <div className="hero-promo-card">
+            <div className="hero-promo-free">FREE</div>
+            <div>
+              <strong>Starter Pack</strong>
+              <p>รับ session trainer ฟรี พร้อม onboarding plan สำหรับสมาชิกใหม่</p>
             </div>
           </div>
         </section>
@@ -106,6 +124,41 @@ export default function LandingPage() {
           <div className="info-stat"><strong>24/7</strong><span>เวลาเปิด</span></div>
           <div className="info-stat"><strong>50+</strong><span>เครื่องออกกำลังกาย</span></div>
           <div className="info-stat"><strong>1,200+</strong><span>สมาชิกที่ใช้งาน</span></div>
+        </section>
+
+        <section className="content-section">
+          <div className="section-heading">
+            <p className="eyebrow">PROMOTION</p>
+            <h2>ข้อเสนอที่ชัดขึ้นในโทน commercial gym</h2>
+          </div>
+          <div className="promo-grid">
+            {promoCards.map((item) => (
+              <article key={item.title} className="promo-card">
+                <span className="promo-tag">LIMITED</span>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="content-section split-showcase-section">
+          <div className="split-showcase-card">
+            <div className="split-showcase-copy">
+              <p className="eyebrow">CLUB EXPERIENCE</p>
+              <h2>เลย์เอาต์และภาพลักษณ์ที่ใกล้ตัวอย่างมากขึ้น</h2>
+              <p>ปรับ hero, โปรโมชัน, section split และการ์ดสำคัญให้มีคอนทราสต์และความรู้สึกแบบ commercial club มากขึ้น โดยยังยึดระบบเดิมเป็นฐาน</p>
+              <div className="split-highlight-list">
+                {clubHighlights.map((item) => (
+                  <article key={item.title} className="split-highlight-item">
+                    <strong>{item.title}</strong>
+                    <p>{item.text}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+            <div className="split-showcase-visual" aria-hidden="true" />
+          </div>
         </section>
 
         <section className="content-section">

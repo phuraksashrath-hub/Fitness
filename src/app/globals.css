@@ -2916,3 +2916,239 @@ select:focus {
     text-align: left;
   }
 }
+
+.hero-stripes {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(36%, 420px);
+  background: repeating-linear-gradient(160deg, rgba(237, 20, 57, 0.95) 0 4px, rgba(5, 6, 7, 0) 4px 12px);
+  opacity: 0.7;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+.hero-promo-card {
+  position: absolute;
+  right: 48px;
+  bottom: 42px;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 18px;
+  align-items: center;
+  width: min(100%, 460px);
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  box-shadow: 0 24px 42px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(12px);
+}
+
+.hero-promo-card strong {
+  display: block;
+  font-size: 1.4rem;
+  color: #111;
+}
+
+.hero-promo-card p {
+  margin: 6px 0 0;
+  color: #4f4a54;
+  line-height: 1.55;
+}
+
+.hero-promo-free {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ef2447 0%, #d40f2f 100%);
+  color: #fff;
+  font-weight: 900;
+  font-size: 2rem;
+  letter-spacing: -0.05em;
+}
+
+.promo-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.promo-card {
+  position: relative;
+  padding: 28px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #121316 0%, #1e2026 62%, #ef2447 62%, #d40f2f 100%);
+  color: #fff;
+  box-shadow: 0 26px 40px rgba(17, 17, 17, 0.16);
+}
+
+.promo-card h3 {
+  margin: 16px 0 10px;
+  font-size: 1.8rem;
+}
+
+.promo-card p {
+  margin: 0;
+  max-width: 360px;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.promo-tag {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.split-showcase-card {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  border-radius: 34px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 28px 40px rgba(17, 17, 17, 0.08);
+}
+
+.split-showcase-copy {
+  position: relative;
+  padding: 40px;
+  background: linear-gradient(180deg, #fff 0%, #f3f1ee 100%);
+}
+
+.split-showcase-copy::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -84px;
+  width: 180px;
+  height: 100%;
+  background: inherit;
+  transform: skewX(-18deg);
+}
+
+.split-showcase-copy > * {
+  position: relative;
+  z-index: 1;
+}
+
+.split-showcase-copy h2 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 3vw, 3.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+}
+
+.split-showcase-copy p {
+  color: #5c5661;
+  line-height: 1.8;
+}
+
+.split-highlight-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.split-highlight-item {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(17, 17, 17, 0.04);
+}
+
+.split-highlight-item p {
+  margin: 8px 0 0;
+}
+
+.split-showcase-visual {
+  min-height: 460px;
+  background:
+    linear-gradient(135deg, rgba(239, 36, 71, 0.12), rgba(17, 17, 17, 0.18)),
+    url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80") center/cover;
+}
+
+.export-button {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.trainer-action-list {
+  gap: 18px;
+}
+
+.trainer-action-card {
+  display: grid;
+  gap: 14px;
+}
+
+.trainer-action-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trainer-notes-input {
+  width: 100%;
+  min-height: 110px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 14px 16px;
+  resize: vertical;
+}
+
+.trainer-notes-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trainer-action-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trainer-complete-button {
+  min-height: 46px;
+  margin-top: 0;
+}
+
+@media (max-width: 1100px) {
+  .hero-promo-card,
+  .promo-grid,
+  .split-showcase-card {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-promo-card {
+    position: static;
+    margin: 28px 24px 0;
+    width: auto;
+  }
+
+  .split-showcase-copy::after {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .trainer-action-header,
+  .trainer-action-buttons {
+    flex-direction: column;
+  }
+
+  .hero-promo-card {
+    margin: 24px 16px 0;
+    padding: 18px;
+  }
+
+  .split-showcase-copy {
+    padding: 26px;
+  }
+}

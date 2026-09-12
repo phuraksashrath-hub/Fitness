@@ -53,6 +53,8 @@ export type SessionSummary = {
   startTime: string;
   endTime: string;
   status: string;
+  trainerNotes?: string | null;
+  completedAt?: string | null;
 };
 
 export type PaymentSummary = {
@@ -119,6 +121,8 @@ export type TrainerDashboard = {
     startTime: string;
     endTime: string;
     status: string;
+    trainerNotes?: string | null;
+    completedAt?: string | null;
   }>;
   memberProgress: Array<{
     memberName: string;
@@ -172,11 +176,24 @@ export const getCurrentUserFromToken = (): CurrentUser | null => {
   };
 };
 
+export const downloadBlob = (blob: Blob, fileName: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 export const getPublicPlans = () => api.get<MembershipPlan[]>("/subscriptions/plans");
 export const createMemberSubscription = (data: { memberId: string; planId: string }) => api.post<SubscriptionSummary>("/subscriptions", data);
 export const getMemberSubscriptions = (memberId: string) => api.get<SubscriptionSummary[]>("/subscriptions/me", { params: { memberId } });
 export const getTrainers = () => api.get<TrainerSummary[]>("/sessions/trainers");
 export const getTrainerDashboard = () => api.get<TrainerDashboard>("/trainers/dashboard");
+export const saveTrainerSessionNotes = (id: string, notes: string) => api.put(`/trainers/sessions/${id}/notes`, { notes });
+export const completeTrainerSession = (id: string, notes: string) => api.put(`/trainers/sessions/${id}/complete`, { notes });
 export const bookMemberSession = (data: {
   memberId: string;
   trainerId: string;
@@ -210,7 +227,15 @@ export const createAdminTrainer = (data: { fullName: string; email: string; pass
   api.post<AdminTrainer>("/admin/trainers", data);
 export const updateAdminTrainer = (id: string, data: { fullName: string; email: string; specialty: string; role: string }) =>
   api.put<AdminTrainer>(`/admin/trainers/${id}`, data);
+export const deleteAdminTrainer = (id: string) => api.delete(`/admin/trainers/${id}`);
 export const getAdminSubscriptions = () => api.get<AdminSubscription[]>("/admin/subscriptions");
 export const getAdminPayments = () => api.get<AdminPayment[]>("/admin/payments");
+export const exportAdminReport = async (reportType: "members" | "trainers" | "subscriptions" | "payments") => {
+  const response = await api.get(`/admin/reports/${reportType}`, { responseType: "blob" });
+  const fallbackName = `${reportType}-report.csv`;
+  const header = response.headers["content-disposition"] as string | undefined;
+  const match = header?.match(/filename="?([^\"]+)"?/);
+  downloadBlob(response.data, match?.[1] || fallbackName);
+};
 
 export default api;
