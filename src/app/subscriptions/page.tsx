@@ -11,11 +11,10 @@ import {
   setAuthToken,
   SubscriptionSummary,
 } from "@/lib/api";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [memberId, setMemberId] = useState("");
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
@@ -23,6 +22,7 @@ export default function SubscriptionPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const requestedPlanId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("planId") : null;
 
   useEffect(() => {
     const user = getCurrentUserFromToken();
@@ -39,14 +39,14 @@ export default function SubscriptionPage() {
     Promise.all([getPublicPlans(), getMemberSubscriptions(user.memberId)])
       .then(([plansRes, subscriptionRes]) => {
         const planData = plansRes.data || [];
-        const currentPlanId = searchParams.get("planId") || planData[0]?.id || "";
+        const currentPlanId = requestedPlanId || planData[0]?.id || "";
         setPlans(planData);
         setPlanId(currentPlanId);
         setSubscriptions(subscriptionRes.data || []);
       })
       .catch(() => setMsg("ไม่สามารถโหลดข้อมูลแพ็กเกจได้"))
       .finally(() => setLoading(false));
-  }, [router, searchParams]);
+  }, [requestedPlanId, router]);
 
   const selectedPlan = useMemo(() => plans.find((item) => item.id === planId) || plans[0], [planId, plans]);
 

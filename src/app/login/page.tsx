@@ -3,15 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import api, { decodeJwtPayload, setAuthToken } from "@/lib/api";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@palmfitness.com");
   const [password, setPassword] = useState("admin123");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const selectedPlanId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("planId") : null;
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +26,11 @@ export default function LoginPage() {
 
       const payload = decodeJwtPayload(token);
       const role = payload?.role || payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || "MEMBER";
-      const planId = searchParams.get("planId");
 
       if (role === "ADMIN") {
         router.push("/admin");
-      } else if (planId) {
-        router.push(`/subscriptions?planId=${planId}`);
+      } else if (selectedPlanId) {
+        router.push(`/subscriptions?planId=${selectedPlanId}`);
       } else {
         router.push("/dashboard");
       }
@@ -57,7 +56,7 @@ export default function LoginPage() {
             <Link href="/" className="text-link">กลับหน้าหลัก</Link>
           </div>
 
-          {searchParams.get("planId") && (
+          {selectedPlanId && (
             <p className="auth-success" style={{ marginBottom: 16 }}>
               สมัครสมาชิกแล้ว เหลือเพียงล็อกอินเพื่อยืนยันแพ็กเกจและชำระเงิน
             </p>

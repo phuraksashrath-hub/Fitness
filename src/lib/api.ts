@@ -63,7 +63,7 @@ export type PaymentSummary = {
 
 export const setAuthToken = (token?: string | null) => {
   if (token) {
-    api.defaults.headers.common.Authorization = `******;
+    api.defaults.headers.common.Authorization = "Bearer " + token;
     return;
   }
 

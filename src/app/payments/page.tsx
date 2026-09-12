@@ -12,7 +12,6 @@ import {
   setAuthToken,
   SubscriptionSummary,
 } from "@/lib/api";
-import { useSearchParams } from "next/navigation";
 
 const discounts: Record<string, number> = {
   none: 0,
@@ -21,7 +20,6 @@ const discounts: Record<string, number> = {
 };
 
 export default function PaymentPage() {
-  const searchParams = useSearchParams();
   const [memberId, setMemberId] = useState("");
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
   const [payments, setPayments] = useState<PaymentSummary[]>([]);
@@ -31,6 +29,8 @@ export default function PaymentPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const requestedSubscriptionId =
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("subscriptionId") : null;
 
   const loadData = async (currentMemberId: string, preselectedId?: string | null) => {
     const [subscriptionRes, paymentRes] = await Promise.all([
@@ -53,10 +53,10 @@ export default function PaymentPage() {
 
     setMemberId(user.memberId);
     setAuthToken(token);
-    loadData(user.memberId, searchParams.get("subscriptionId"))
+    loadData(user.memberId, requestedSubscriptionId)
       .catch(() => setMsg("ไม่สามารถโหลดข้อมูลการชำระเงินได้"))
       .finally(() => setLoading(false));
-  }, [searchParams]);
+  }, [requestedSubscriptionId]);
 
   const selectedSubscription = useMemo(
     () => subscriptions.find((item) => item.id === subscriptionId) || subscriptions[0],
