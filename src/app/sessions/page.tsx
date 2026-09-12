@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -125,8 +125,8 @@ export default function SessionsPage() {
                 </thead>
                 <tbody>
                   {sessions.length > 0 ? sessions.map((session) => (
-                    <>
-                      <tr key={session.id}>
+                    <Fragment key={session.id}>
+                      <tr>
                         <td>{session.sessionDate}</td>
                         <td>{toTimeInput(session.startTime)} - {toTimeInput(session.endTime)}</td>
                         <td>{session.trainerName}</td>
@@ -154,7 +154,7 @@ export default function SessionsPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   )) : (
                     <tr>
                       <td colSpan={5}>ยังไม่มี session ที่จองไว้</td>

@@ -2,6 +2,7 @@ using FitnessCenter.Api.DTOs;
 using FitnessCenter.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/sessions")]
@@ -17,11 +18,21 @@ public class SessionController : ControllerBase
 
     [HttpPost("book")]
     public async Task<IActionResult> Book([FromBody] BookSessionDto dto)
-        => Ok(await _service.BookAsync(dto));
+    {
+        var access = ResolveMemberId(dto.MemberId);
+        if (access.failure is not null) return access.failure;
+
+        return Ok(await _service.BookAsync(dto with { MemberId = access.memberId }));
+    }
 
     [HttpGet("me")]
     public async Task<IActionResult> MySessions([FromQuery] Guid memberId)
-        => Ok(await _service.GetByMemberAsync(memberId));
+    {
+        var access = ResolveMemberId(memberId);
+        if (access.failure is not null) return access.failure;
+
+        return Ok(await _service.GetByMemberAsync(access.memberId));
+    }
 
     [HttpPut("{id}/cancel")]
     public async Task<IActionResult> Cancel(Guid id)
@@ -35,6 +46,22 @@ public class SessionController : ControllerBase
     {
         await _service.RescheduleAsync(id, dto);
         return Ok(new { message = "Rescheduled" });
+    }
+
+    private (Guid memberId, IActionResult? failure) ResolveMemberId(Guid requestedMemberId)
+    {
+        var claimValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(ClaimTypes.Name);
+        if (!Guid.TryParse(claimValue, out var authenticatedMemberId))
+        {
+            return (Guid.Empty, Unauthorized(new { message = "Invalid member identity" }));
+        }
+
+        if (requestedMemberId != Guid.Empty && requestedMemberId != authenticatedMemberId)
+        {
+            return (Guid.Empty, Forbid());
+        }
+
+        return (authenticatedMemberId, null);
     }
 }
 
