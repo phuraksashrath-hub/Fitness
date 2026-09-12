@@ -2458,7 +2458,53 @@ select:focus {
   color: #117a35;
 }
 
+.status-chip.expired,
+.status-chip.failed,
+.status-chip.pending {
+  background: rgba(245, 158, 11, 0.14);
+  color: #9a5d00;
+}
+
+.status-chip.completed,
+.status-chip.paid {
+  background: rgba(59, 130, 246, 0.14);
+  color: #1d4ed8;
+}
+
 .status-chip.cancelled {
+  background: rgba(213, 16, 45, 0.12);
+  color: var(--jet-red);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 94px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: rgba(17, 17, 17, 0.08);
+  color: #111;
+}
+
+.status-pill.confirmed {
+  background: rgba(34, 197, 94, 0.14);
+  color: #117a35;
+}
+
+.status-pill.completed {
+  background: rgba(59, 130, 246, 0.14);
+  color: #1d4ed8;
+}
+
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.14);
+  color: #9a5d00;
+}
+
+.status-pill.cancelled {
   background: rgba(213, 16, 45, 0.12);
   color: var(--jet-red);
 }

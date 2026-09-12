@@ -15,6 +15,14 @@ import {
   SubscriptionSummary,
 } from "@/lib/api";
 
+const paymentBadgeClass = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized === "paid") return "confirmed";
+  if (normalized === "failed") return "cancelled";
+  if (normalized === "pending") return "pending";
+  return "completed";
+};
+
 export default function DashboardPage() {
   const [user, setUser] = useState<{ fullName: string; email: string; role: string; memberId: string } | null>(null);
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
@@ -164,7 +172,7 @@ export default function DashboardPage() {
                         <td>{Number(payment.amount).toLocaleString()}</td>
                         <td>{Number(payment.discountAmount).toLocaleString()}</td>
                         <td>{Number(payment.finalAmount).toLocaleString()}</td>
-                        <td><span className="status-pill confirmed">{payment.status}</span></td>
+                        <td><span className={`status-pill ${paymentBadgeClass(payment.status)}`}>{payment.status}</span></td>
                       </tr>
                     )) : (
                       <tr>

@@ -224,7 +224,7 @@ export default function AdminPage() {
                         <td><input value={member.fullName} onChange={(e) => handleMemberChange(member.id, "fullName", e.target.value)} /></td>
                         <td><input value={member.email} onChange={(e) => handleMemberChange(member.id, "email", e.target.value)} /></td>
                         <td><input value={member.phone} onChange={(e) => handleMemberChange(member.id, "phone", e.target.value)} /></td>
-                        <td><select value={member.role} onChange={(e) => handleMemberChange(member.id, "role", e.target.value)}><option value="MEMBER">MEMBER</option><option value="ADMIN">ADMIN</option></select></td>
+                        <td><select value={member.role} onChange={(e) => handleMemberChange(member.id, "role", e.target.value)}><option value="MEMBER">MEMBER</option><option value="TRAINER">TRAINER</option><option value="ADMIN">ADMIN</option></select></td>
                         <td><button type="button" className="table-action-button danger" onClick={() => handleDeleteMember(member.id)}>Delete</button></td>
                       </tr>
                     ))}

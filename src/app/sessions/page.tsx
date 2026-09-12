@@ -14,6 +14,13 @@ import {
 } from "@/lib/api";
 
 const toTimeInput = (value: string) => value?.slice(0, 5) || "09:00";
+const badgeClass = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized === "booked") return "confirmed";
+  if (normalized === "cancelled") return "cancelled";
+  if (normalized === "completed") return "completed";
+  return "pending";
+};
 
 export default function SessionsPage() {
   const [memberId, setMemberId] = useState("");
@@ -130,7 +137,7 @@ export default function SessionsPage() {
                         <td>{session.sessionDate}</td>
                         <td>{toTimeInput(session.startTime)} - {toTimeInput(session.endTime)}</td>
                         <td>{session.trainerName}</td>
-                        <td><span className={`status-pill ${session.status === "BOOKED" ? "confirmed" : "pending"}`}>{session.status}</span></td>
+                        <td><span className={`status-pill ${badgeClass(session.status)}`}>{session.status}</span></td>
                         <td>
                           <div className="table-actions">
                             <button type="button" className="table-action-button" onClick={() => startEditing(session)} disabled={session.status !== "BOOKED"}>

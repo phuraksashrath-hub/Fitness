@@ -89,6 +89,12 @@ public class BookingService
     {
         var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
         if (session.MemberId != memberId) throw new Exception("Session does not belong to this member");
+        if (session.Status == "BOOKED")
+        {
+            var subscription = await _subRepo.GetByIdAsync(session.SubscriptionId) ?? throw new Exception("Subscription not found");
+            subscription.RemainingSessions += 1;
+            await _subRepo.UpdateAsync(subscription);
+        }
         session.Status = "CANCELLED";
         await _sessionRepo.UpdateAsync(session);
     }

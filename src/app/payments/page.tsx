@@ -19,6 +19,14 @@ const discounts: Record<string, number> = {
   renewal: 0.15,
 };
 
+const paymentBadgeClass = (status: string) => {
+  const normalized = status.toLowerCase();
+  if (normalized === "paid") return "confirmed";
+  if (normalized === "failed") return "cancelled";
+  if (normalized === "pending") return "pending";
+  return "completed";
+};
+
 export default function PaymentPage() {
   const [memberId, setMemberId] = useState("");
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
@@ -169,7 +177,7 @@ export default function PaymentPage() {
                         <td>{Number(payment.amount).toLocaleString()}</td>
                         <td>{Number(payment.discountAmount).toLocaleString()}</td>
                         <td>{Number(payment.finalAmount).toLocaleString()}</td>
-                        <td><span className="status-pill confirmed">{payment.status}</span></td>
+                        <td><span className={`status-pill ${paymentBadgeClass(payment.status)}`}>{payment.status}</span></td>
                       </tr>
                     )) : (
                       <tr>
