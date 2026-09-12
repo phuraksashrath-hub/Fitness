@@ -203,7 +203,7 @@ public class AdminService
         builder.AppendLine("Id,FullName,Email,Phone,Role");
         foreach (var item in members)
         {
-            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",{item.Email},{item.Phone},{item.Role}");
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",\"{Escape(item.Email)}\",\"{Escape(item.Phone)}\",\"{Escape(item.Role)}\"");
         }
         return builder.ToString();
     }
@@ -215,7 +215,7 @@ public class AdminService
         builder.AppendLine("Id,FullName,Email,Specialty,Role");
         foreach (var item in trainers)
         {
-            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",{item.Email},\"{Escape(item.Specialty)}\",{item.Role}");
+            builder.AppendLine($"{item.Id},\"{Escape(item.FullName)}\",\"{Escape(item.Email)}\",\"{Escape(item.Specialty)}\",\"{Escape(item.Role)}\"");
         }
         return builder.ToString();
     }
@@ -227,7 +227,7 @@ public class AdminService
         builder.AppendLine("Id,MemberName,PlanName,Status,RemainingSessions,StartDate,EndDate");
         foreach (var item in subscriptions)
         {
-            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",{item.PlanName},{item.Status},{item.RemainingSessions},{item.StartDate},{item.EndDate}");
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",\"{Escape(item.PlanName)}\",\"{Escape(item.Status)}\",{item.RemainingSessions},{item.StartDate},{item.EndDate}");
         }
         return builder.ToString();
     }
@@ -239,7 +239,7 @@ public class AdminService
         builder.AppendLine("Id,MemberName,Method,Amount,DiscountAmount,FinalAmount,Status,CreatedAt");
         foreach (var item in payments)
         {
-            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",{item.Method},{item.Amount},{item.DiscountAmount},{item.FinalAmount},{item.Status},{item.CreatedAt:O}");
+            builder.AppendLine($"{item.Id},\"{Escape(item.MemberName)}\",\"{Escape(item.Method)}\",{item.Amount},{item.DiscountAmount},{item.FinalAmount},\"{Escape(item.Status)}\",{item.CreatedAt:O}");
         }
         return builder.ToString();
     }

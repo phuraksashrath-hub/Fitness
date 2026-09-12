@@ -13,6 +13,7 @@ public class SessionController : ControllerBase
     public SessionController(BookingService service) => _service = service;
 
     [HttpGet("trainers")]
+    [Authorize(Roles = "MEMBER")]
     public async Task<IActionResult> Trainers()
         => Ok(await _service.GetTrainerCatalogAsync());
 
