@@ -161,10 +161,10 @@ public class AdminService
 
         return new[]
         {
-            new { label = "Members", value = totalMembers },
-            new { label = "Trainers", value = totalTrainers },
-            new { label = "Plans", value = totalPlans },
-            new { label = "Subscriptions", value = totalSubscriptions },
+            new { label = "Members", value = (decimal)totalMembers },
+            new { label = "Trainers", value = (decimal)totalTrainers },
+            new { label = "Plans", value = (decimal)totalPlans },
+            new { label = "Subscriptions", value = (decimal)totalSubscriptions },
             new { label = "Revenue", value = totalRevenue }
         };
     }
