@@ -38,7 +38,9 @@ export default function PaymentPage() {
       getMemberPayments(currentMemberId),
     ]);
 
-    const memberSubscriptions = (subscriptionRes.data || []).filter((item) => item.status === "ACTIVE");
+    const memberSubscriptions = (subscriptionRes.data || []).filter(
+      (item) => item.status === "ACTIVE" || item.id === preselectedId
+    );
     const currentSubscriptionId = preselectedId || memberSubscriptions[0]?.id || "";
 
     setSubscriptions(memberSubscriptions);

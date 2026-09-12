@@ -61,7 +61,7 @@ public class PaymentService
     {
         return await _db.Payments
             .Where(x => x.MemberId == memberId)
-            .OrderByDescending(x => x.Id)
+            .OrderByDescending(x => x.CreatedAt)
             .Select(x => new PaymentSummaryDto(
                 x.Id,
                 x.MemberId,

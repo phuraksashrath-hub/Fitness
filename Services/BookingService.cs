@@ -85,19 +85,21 @@ public class BookingService
             .ToListAsync();
     }
 
-    public async Task CancelAsync(Guid id)
+    public async Task CancelAsync(Guid id, Guid memberId)
     {
         var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
+        if (session.MemberId != memberId) throw new Exception("Session does not belong to this member");
         session.Status = "CANCELLED";
         await _sessionRepo.UpdateAsync(session);
     }
 
-    public async Task RescheduleAsync(Guid id, RescheduleDto dto)
+    public async Task RescheduleAsync(Guid id, Guid memberId, RescheduleDto dto)
     {
         if (dto.EndTime <= dto.StartTime)
             throw new Exception("Session end time must be after start time");
 
         var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
+        if (session.MemberId != memberId) throw new Exception("Session does not belong to this member");
 
         var conflict = await _sessionRepo.HasTrainerConflict(session.TrainerId, dto.SessionDate, dto.StartTime, dto.EndTime);
         if (conflict) throw new Exception("Trainer timeslot conflict");

@@ -37,14 +37,20 @@ public class SessionController : ControllerBase
     [HttpPut("{id}/cancel")]
     public async Task<IActionResult> Cancel(Guid id)
     {
-        await _service.CancelAsync(id);
+        var access = ResolveMemberId(Guid.Empty);
+        if (access.failure is not null) return access.failure;
+
+        await _service.CancelAsync(id, access.memberId);
         return Ok(new { message = "Cancelled" });
     }
 
     [HttpPut("{id}/reschedule")]
     public async Task<IActionResult> Reschedule(Guid id, [FromBody] RescheduleDto dto)
     {
-        await _service.RescheduleAsync(id, dto);
+        var access = ResolveMemberId(Guid.Empty);
+        if (access.failure is not null) return access.failure;
+
+        await _service.RescheduleAsync(id, access.memberId, dto);
         return Ok(new { message = "Rescheduled" });
     }
 
