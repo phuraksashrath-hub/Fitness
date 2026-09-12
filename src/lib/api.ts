@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
 });
 
 export const setAuthToken = (token: string) => {
@@ -41,6 +41,8 @@ export const getCurrentUserFromToken = () => {
 
 export const getAdminSummary = () => api.get("/admin/summary");
 export const getAdminMembers = () => api.get("/admin/members");
+export const getAdminMemberById = (id: string) => api.get(`/admin/members/${id}`);
+export const getAdminMemberDetail = (id: string) => api.get(`/admin/members/${id}/detail`);
 export const updateAdminMember = (id: string, data: Record<string, string>) => api.put(`/admin/members/${id}`, data);
 export const deleteAdminMember = (id: string) => api.delete(`/admin/members/${id}`);
 export const getAdminPlans = () => api.get("/admin/plans");
