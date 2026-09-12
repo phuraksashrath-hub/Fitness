@@ -281,7 +281,6 @@ export default function AdminPage() {
                     <input value={trainer.specialty} onChange={(e) => handleTrainerChange(trainer.id, "specialty", e.target.value)} />
                     <select value={trainer.role} onChange={(e) => handleTrainerChange(trainer.id, "role", e.target.value)}>
                       <option value="TRAINER">TRAINER</option>
-                      <option value="ADMIN">ADMIN</option>
                     </select>
                   </article>
                 ))}

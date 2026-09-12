@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import api, { decodeJwtPayload, setAuthToken } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("admin@palmfitness.com");
   const [password, setPassword] = useState("admin123");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const selectedPlanId = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("planId") : null;
+  const selectedPlanId = searchParams.get("planId");
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,5 +102,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24 }}>กำลังโหลด...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

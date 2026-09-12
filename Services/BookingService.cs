@@ -89,12 +89,11 @@ public class BookingService
     {
         var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
         if (session.MemberId != memberId) throw new Exception("Session does not belong to this member");
-        if (session.Status == "BOOKED")
-        {
-            var subscription = await _subRepo.GetByIdAsync(session.SubscriptionId) ?? throw new Exception("Subscription not found");
-            subscription.RemainingSessions += 1;
-            await _subRepo.UpdateAsync(subscription);
-        }
+        if (session.Status != "BOOKED") throw new Exception("Only booked sessions can be cancelled");
+
+        var subscription = await _subRepo.GetByIdAsync(session.SubscriptionId) ?? throw new Exception("Subscription not found");
+        subscription.RemainingSessions += 1;
+        await _subRepo.UpdateAsync(subscription);
         session.Status = "CANCELLED";
         await _sessionRepo.UpdateAsync(session);
     }
@@ -106,8 +105,20 @@ public class BookingService
 
         var session = await _sessionRepo.GetByIdAsync(id) ?? throw new Exception("Session not found");
         if (session.MemberId != memberId) throw new Exception("Session does not belong to this member");
+        if (session.Status != "BOOKED") throw new Exception("Only booked sessions can be rescheduled");
 
-        var conflict = await _sessionRepo.HasTrainerConflict(session.TrainerId, dto.SessionDate, dto.StartTime, dto.EndTime);
+        var sameSlot = session.SessionDate == dto.SessionDate &&
+            session.StartTime == dto.StartTime &&
+            session.EndTime == dto.EndTime;
+
+        var conflict = !sameSlot && await _db.WorkoutSessions.AnyAsync(s =>
+            s.Id != session.Id &&
+            s.TrainerId == session.TrainerId &&
+            s.SessionDate == dto.SessionDate &&
+            s.Status == "BOOKED" &&
+            ((dto.StartTime >= s.StartTime && dto.StartTime < s.EndTime) ||
+             (dto.EndTime > s.StartTime && dto.EndTime <= s.EndTime) ||
+             (dto.StartTime <= s.StartTime && dto.EndTime >= s.EndTime)));
         if (conflict) throw new Exception("Trainer timeslot conflict");
 
         session.SessionDate = dto.SessionDate;

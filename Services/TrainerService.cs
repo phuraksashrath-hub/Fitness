@@ -26,7 +26,7 @@ public class TrainerService
             join member in _db.Members on session.MemberId equals member.Id
             join subscription in _db.Subscriptions on session.SubscriptionId equals subscription.Id
             join plan in _db.MembershipPlans on subscription.PlanId equals plan.Id
-            where session.TrainerId == trainerId && session.SessionDate >= today
+            where session.TrainerId == trainerId && session.SessionDate >= today && session.Status == "BOOKED"
             orderby session.SessionDate, session.StartTime
             select new TrainerSessionItemDto(
                 session.Id,
@@ -40,17 +40,18 @@ public class TrainerService
 
         var memberProgress = await (
             from subscription in _db.Subscriptions
-            join session in _db.WorkoutSessions on subscription.Id equals session.SubscriptionId
             join member in _db.Members on subscription.MemberId equals member.Id
             join plan in _db.MembershipPlans on subscription.PlanId equals plan.Id
-            where session.TrainerId == trainerId
-            group new { subscription, member, plan } by new { member.FullName, plan.PlanName, subscription.RemainingSessions, subscription.Status } into grouped
-            orderby grouped.Key.FullName
+            where _db.WorkoutSessions.Any(session =>
+                session.SubscriptionId == subscription.Id &&
+                session.TrainerId == trainerId &&
+                session.Status == "BOOKED")
+            orderby member.FullName
             select new TrainerMemberProgressDto(
-                grouped.Key.FullName,
-                grouped.Key.PlanName,
-                grouped.Key.RemainingSessions,
-                grouped.Key.Status)
+                member.FullName,
+                plan.PlanName,
+                subscription.RemainingSessions,
+                subscription.Status)
         ).ToListAsync();
 
         var weeklySessions = schedule.Where(x => x.SessionDate <= endOfWeek).ToList();

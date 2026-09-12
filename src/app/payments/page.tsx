@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -12,6 +12,7 @@ import {
   setAuthToken,
   SubscriptionSummary,
 } from "@/lib/api";
+import { useSearchParams } from "next/navigation";
 
 const discounts: Record<string, number> = {
   none: 0,
@@ -27,7 +28,9 @@ const paymentBadgeClass = (status: string) => {
   return "completed";
 };
 
-export default function PaymentPage() {
+function PaymentContent() {
+  const searchParams = useSearchParams();
+  const requestedSubscriptionId = searchParams.get("subscriptionId");
   const [memberId, setMemberId] = useState("");
   const [subscriptions, setSubscriptions] = useState<SubscriptionSummary[]>([]);
   const [payments, setPayments] = useState<PaymentSummary[]>([]);
@@ -37,8 +40,6 @@ export default function PaymentPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const requestedSubscriptionId =
-    typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("subscriptionId") : null;
 
   const loadData = async (currentMemberId: string, preselectedId?: string | null) => {
     const [subscriptionRes, paymentRes] = await Promise.all([
@@ -192,5 +193,13 @@ export default function PaymentPage() {
         </div>
       </main>
     </ProtectedRoute>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24 }}>กำลังโหลดข้อมูล...</div>}>
+      <PaymentContent />
+    </Suspense>
   );
 }
