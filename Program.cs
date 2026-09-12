@@ -14,7 +14,31 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3005", "http://localhost:3006")
+        var origins = new List<string>
+        {
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3005",
+            "http://localhost:3006"
+        };
+
+        var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        var frontendUrl = builder.Configuration["Cors:FrontendUrl"];
+
+        if (!string.IsNullOrWhiteSpace(frontendUrl))
+        {
+            origins.Add(frontendUrl);
+        }
+
+        foreach (var origin in configuredOrigins)
+        {
+            if (!string.IsNullOrWhiteSpace(origin) && !origins.Contains(origin))
+            {
+                origins.Add(origin);
+            }
+        }
+
+        policy.WithOrigins(origins.ToArray())
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -43,8 +67,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+    "Data Source=fitnesscenter.db";
+
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseInMemoryDatabase("FitnessCenterDb"));
+    opt.UseSqlite(connectionString));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opt =>
@@ -81,31 +108,36 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
 
     if (!db.Members.Any())
     {
-        db.Members.Add(new Member
-        {
-            FullName = "Phuraksash",
-            Email = "Phuraksash@gmail.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-            Phone = "0999999999",
-            Role = "MEMBER"
-        });
-        db.Members.Add(new Member
+        var admin = new Member
         {
             FullName = "Admin Palm",
             Email = "admin@palmfitness.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
             Phone = "0888888888",
             Role = "ADMIN"
-        });
+        };
+
+        var demoMember = new Member
+        {
+            FullName = "Siriwan Wongsiri",
+            Email = "member@palmfitness.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("member123"),
+            Phone = "0812345678",
+            Role = "MEMBER"
+        };
+
+        db.Members.AddRange(admin, demoMember);
         db.SaveChanges();
     }
 
     if (!db.MembershipPlans.Any())
     {
-        db.MembershipPlans.AddRange(
+        var plans = new[]
+        {
             new MembershipPlan
             {
                 Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
@@ -130,8 +162,32 @@ using (var scope = app.Services.CreateScope())
                 Price = 3990m,
                 MaxSessionsPerMonth = 20
             }
-        );
+        };
+
+        db.MembershipPlans.AddRange(plans);
         db.SaveChanges();
+    }
+
+    var existingAdmin = await db.Members.FirstOrDefaultAsync(x => x.Email == "admin@palmfitness.com");
+    if (existingAdmin is not null && !db.Subscriptions.Any())
+    {
+        var demo = await db.Members.FirstOrDefaultAsync(x => x.Email == "member@palmfitness.com");
+        var plans = await db.MembershipPlans.ToListAsync();
+        var plan = plans.OrderBy(x => x.Price).FirstOrDefault();
+
+        if (demo is not null && plan is not null)
+        {
+            db.Subscriptions.Add(new Subscription
+            {
+                MemberId = demo.Id,
+                PlanId = plan.Id,
+                StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-20)),
+                EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10)),
+                Status = "ACTIVE",
+                RemainingSessions = plan.MaxSessionsPerMonth
+            });
+            db.SaveChanges();
+        }
     }
 }
 
